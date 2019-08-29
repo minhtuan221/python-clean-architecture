@@ -21,7 +21,7 @@ class Config(object):
     TESTING = False
     DB_SERVER = '0.0.0.0'
     PORT = 5010
-    DATABASE_URI = "sqlite:///./test.db"
+    DATABASE_URL = "sqlite:///./test.db"
     PRIVATE_KEY = open(private_key_file).read()
     PUBLIC_KEY = open(public_key_file).read()
 
@@ -30,20 +30,20 @@ class ProductionConfig(Config):
     """Uses production database server."""
     DB_SERVER = '0.0.0.0'
     PORT = json_config[production_key]['PORT']
-    DATABASE_URI = json_config[production_key]['sqlalchemy.url']
+    DATABASE_URL = json_config[production_key]['sqlalchemy.url']
 
 
 class DevelopmentConfig(Config):
     DB_SERVER = '0.0.0.0'
     DEBUG = True
     PORT = json_config[development_key]['PORT']
-    DATABASE_URI = json_config[development_key]['sqlalchemy.url']
+    DATABASE_URL = json_config[development_key]['sqlalchemy.url']
 
 
 class TestingConfig(Config):
     DB_SERVER = 'localhost'
     DEBUG = True
-    DATABASE_URI = 'sqlite:///:memory:'
+    DATABASE_URL = 'sqlite:///:memory:'
 
 
 config = {
