@@ -1,8 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 from collections import namedtuple
-from sqlalchemy import Column, String, Integer, DateTime, Text, Boolean
+from sqlalchemy import Column, String, Integer, DateTime, Text, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
 from .base import Base
+import jwt
 import hashlib
 import binascii
 import os
@@ -15,6 +17,9 @@ class User(Base):
     password: str = Column(String(255))
     role_ids: str = Column(Text)
     is_confirmed: bool = Column(Boolean, default=False)
+
+    roles = relationship("UserRole", back_populates="user")
+
     created_at: datetime = Column(
         DateTime, index=True, default=datetime.utcnow)
     updated_at: datetime = Column(
@@ -57,3 +62,25 @@ class User(Base):
                                       100000)
         pwdhash = binascii.hexlify(pwdhash).decode('ascii')
         return pwdhash == stored_password
+
+
+class UserRole(Base):
+    __tablename__ = 'user_role'
+    user_id: int = Column(Integer, ForeignKey('users.id'), primary_key=True)
+    role_id: int = Column(Integer, ForeignKey('roles.id'), primary_key=True)
+    role = relationship("Role", back_populates="users")
+    user = relationship("User", back_populates="roles")
+
+
+class Role(Base):
+    __tablename__ = 'roles'
+    id: int = Column(Integer, primary_key=True)
+    name: str = Column(String(128), unique=True)
+    description: str = Column(String(500), unique=True)
+    users = relationship("UserRole", back_populates="role")
+
+
+class PermissionPolicy(Base):
+    __tablename__ = 'permission_policy'
+    role_id: int = Column(Integer, ForeignKey('roles.id'), primary_key=True)
+    permission: str = Column(String(128), primary_key=True)

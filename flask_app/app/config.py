@@ -1,4 +1,5 @@
 import json
+import jwt
 
 
 def read_config(file_name="config.json"):
@@ -10,6 +11,8 @@ def read_config(file_name="config.json"):
 json_config = read_config('./config.json')
 development_key = 'dev'
 production_key = 'prod'
+private_key_file = './private.pem'
+public_key_file = './public.pem'
 
 
 class Config(object):
@@ -19,20 +22,22 @@ class Config(object):
     DB_SERVER = '0.0.0.0'
     PORT = 5010
     DATABASE_URI = "sqlite:///./test.db"
+    PRIVATE_KEY = open(private_key_file).read()
+    PUBLIC_KEY = open(public_key_file).read()
 
 
 class ProductionConfig(Config):
     """Uses production database server."""
     DB_SERVER = '0.0.0.0'
     PORT = json_config[production_key]['PORT']
-    DATABASE_URI = json_config[production_key]['DATABASE_URI']
+    DATABASE_URI = json_config[production_key]['sqlalchemy.url']
 
 
 class DevelopmentConfig(Config):
-    DB_SERVER = 'localhost'
+    DB_SERVER = '0.0.0.0'
     DEBUG = True
     PORT = json_config[development_key]['PORT']
-    DATABASE_URI = json_config[development_key]['DATABASE_URI']
+    DATABASE_URI = json_config[development_key]['sqlalchemy.url']
 
 
 class TestingConfig(Config):

@@ -1,16 +1,80 @@
-
+from flask import jsonify, g, request
+from functools import wraps
+from app.domain.model.errors import Error, HttpStatusCode
+from app.domain.usecase.user import UserUsecase
 
 class Middleware(object):
-    def __init__(self, function): 
-        self.function = function 
-      
-    def __call__(self, *args, **kwargs): 
-  
-        # We can add some code  
-        # before function call 
-  
-        res = self.function(*args, **kwargs) 
-  
-        # We can also add some code 
-        # after function call. 
-        return res
+    def __init__(self, a: UserUsecase):
+        self.user_usecase = a
+    
+    def json(self, func):
+        """Contain handler for json and error exception. Accept only one value (not tuple) and should be a dict/list
+        
+        Arguments:
+            func {[type]} -- [description]
+        
+        Returns:
+            [type] -- [description]
+        """
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                res = func(*args, **kwargs)
+            except Exception as e:
+                if type(e) is Error:
+                    return jsonify(e.to_json()), e.code()
+                raise e
+                # return jsonify(data=None, error=f'Unknown error: {str(e)}'), HttpStatusCode.Internal_Server_Error
+            if res is not None:
+                if type(res) is Error:
+                    return jsonify(res.to_json()), res.code()
+                return jsonify(data=res)
+            return jsonify(data=[])
+        return wrapper
+    
+    def get_bearer_token(self):
+        if 'Authorization' in request.headers:
+            # Flask/Werkzeug do not recognize any authentication types
+            # other than Basic or Digest or bearer, so here we parse the header by
+            # hand
+            try:
+                auth_type, token = request.headers['Authorization'].split(None, 1)
+            except ValueError:
+                raise Exception('The Authorization header is either empty or has no token')
+        else:
+            raise Exception('The Authorization header is either empty or has no token')
+
+        # if the auth type does not match, we act as if there is no auth
+        # this is better than failing directly, as it allows the callback
+        # to handle special cases, like supporting multiple auth types
+        if auth_type!='Bearer':
+            raise Exception('The Authorization header is either empty or has no token') 
+        return token
+
+    def verify_auth_token(self, f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+
+            # Flask normally handles OPTIONS requests on its own, but in the
+            # case it is configured to forward those to the application, we
+            # need to ignore authentication headers and let the request through
+            # to avoid unwanted interactions with CORS.
+            if request.method != 'OPTIONS':  # pragma: no cover
+                token = self.get_bearer_token()
+                user_id = self.user_usecase.validate_auth_token(token)
+                user = self.user_usecase.find_by_id(user_id)
+                if user:
+                    g.user = user
+            return f(*args, **kwargs)
+        return decorated
+
+
+def requires_permission(sPermission):
+    def decorator(fn):
+        def decorated(*args, **kwargs):
+            # lPermissions = get_permissions(current_user_id())
+            # if sPermission in lPermissions:
+            #     return fn(*args, **kwargs)
+            raise Exception("permission denied")
+        return decorated
+    return decorator

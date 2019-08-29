@@ -7,6 +7,8 @@ from sqlalchemy.orm import scoped_session
 
 Base = declarative_base()
 
+from app.domain.model.user import User, UserRole, Role, PermissionPolicy
+from app.domain.model.blacklist_token import  BlacklistToken
 
 class ConnectionPool(object):
     def __init__(self, connection_string: str, echo=False):
@@ -88,17 +90,18 @@ def init_database(connection_string: str = "mysql://admin:123456@/field_sale"):
         print("-" * len(msg.split("\n")[0]))
 
     msg("Creating Tree Table:")
-    from .user import User
     from app.infrastructure.persistence.user import UserRepository
     from app.domain.usecase.user import UserUsecase
-
+    
     Base.metadata.create_all(engine)
 
-    connection_pool = ConnectionPool(connection_string, echo=True)
-    user_repository = UserRepository(connection_pool)
-    user_usecase = UserUsecase(user_repository)
+    # connection_pool = ConnectionPool(connection_string, echo=True)
+    # user_repository = UserRepository(connection_pool)
+    # user_usecase = UserUsecase(user_repository)
 
-    user = user_usecase.create_new_user("minhtuan1", "1233", "admin")
-    user = user_usecase.create_new_user("minhtuan2", "1233", "admin")
-    user = user_usecase.find_by_id(2)
-    print(user.email, user.password, user.updated_at)
+    # user = user_usecase.create_new_user("minhtuan1", "1233", "admin")
+    # user = user_usecase.create_new_user("minhtuan2", "1233", "admin")
+    # user = user_usecase.find_by_id(2)
+    # print(user.email, user.password, user.updated_at)
+
+migration_base = Base
