@@ -10,7 +10,7 @@ from app.infrastructure.persistence.user import UserRepository
 from app.pkgs.type_check import type_check
 
 
-class UserUsecase(object):
+class UserService(object):
 
     def __init__(self, user_repo: UserRepository, public_key, secret_key=''):
         self.user_repo: UserRepository = user_repo
@@ -31,8 +31,7 @@ class UserUsecase(object):
         user.hash_password(password)
         # set is_confirm to true
         user.is_confirmed = True
-        self.user_repo.create(user)
-        return user.to_json()
+        return self.user_repo.create(user)
 
     def sign_up_new_user(self, email: str, password: str):
         self.validate_user_email_password(email, password)
@@ -40,8 +39,7 @@ class UserUsecase(object):
         user.hash_password(password)
         # set is_confirm to False
         user.is_confirmed = False
-        self.user_repo.create(user)
-        return user.to_json()
+        return self.user_repo.create(user)
 
     def login(self, email: str, password: str):
         user = self.user_repo.find_by_email(email)
@@ -57,19 +55,14 @@ class UserUsecase(object):
     def find_by_id(self, user_id: int):
         user: User = self.user_repo.find(user_id)
         if user:
-            user_dict = user.to_json()
-            # roles = self.user_repo.find_role_by_user(user)
-            # for r in roles:
-            #     user_dict['roles'].append(r.to_json())
-            return user_dict
+            roles = self.user_repo.find_role_by_user(user)
+            user.roles = roles
+            return user
         raise errors.record_not_found
 
-    def search(self, email: str) -> List[User]:
+    def search(self, email: str) -> List[dict]:
         users = self.user_repo.search(email)
-        res = []
-        for u in users:
-            res.append(u.to_json())
-        return res
+        return users
 
     @type_check
     def update_password(self, user_id: int, old_password: str, new_password: str, retype_password: str):
@@ -77,27 +70,27 @@ class UserUsecase(object):
             raise errors.Error(
                 'New Password and retype password is not matched')
         validator.validate_password(new_password)
-        user = self.find_by_id(user_id)
+        user = self.user_repo.find(user_id)
         if not user:
             raise errors.record_not_found
         if user.verify_password(old_password):
             # confirm old password
             user.hash_password(new_password)
             user = self.user_repo.update(user)
-        return user.to_json()
+        return user
 
     @type_check
     def update_is_confirmed(self, user_id: int, is_confirmed: bool):
-        user = self.find_by_id(user_id)
+        user = self.user_repo.find(user_id)
         if not user:
             raise errors.record_not_found
         user.is_confirmed = is_confirmed
-        user = self.user_repo.update(user_id, user)
-        return user.to_json()
+        user = self.user_repo.update(user)
+        return user
 
     def delete(self, user_id: int):
         user = self.user_repo.delete(user_id)
-        return user.to_json()
+        return user
 
     def encode_auth_token(self, user: User):
         """
