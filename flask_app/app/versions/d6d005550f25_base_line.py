@@ -1,8 +1,8 @@
-"""baseline
+"""base_line
 
-Revision ID: 627dffd9b66f
+Revision ID: d6d005550f25
 Revises: 
-Create Date: 2019-08-29 09:31:47.577579
+Create Date: 2019-08-30 11:24:16.538824
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '627dffd9b66f'
+revision = 'd6d005550f25'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -30,15 +30,20 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=128), nullable=True),
     sa.Column('description', sa.String(length=500), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('description'),
     sa.UniqueConstraint('name')
     )
+    op.create_index(op.f('ix_roles_created_at'), 'roles', ['created_at'], unique=False)
+    op.create_index(op.f('ix_roles_deleted_at'), 'roles', ['deleted_at'], unique=False)
+    op.create_index(op.f('ix_roles_updated_at'), 'roles', ['updated_at'], unique=False)
     op.create_table('users',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('email', sa.String(length=128), nullable=True),
     sa.Column('password', sa.String(length=255), nullable=True),
-    sa.Column('role_ids', sa.Text(), nullable=True),
     sa.Column('is_confirmed', sa.Boolean(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
@@ -73,6 +78,9 @@ def downgrade():
     op.drop_index(op.f('ix_users_deleted_at'), table_name='users')
     op.drop_index(op.f('ix_users_created_at'), table_name='users')
     op.drop_table('users')
+    op.drop_index(op.f('ix_roles_updated_at'), table_name='roles')
+    op.drop_index(op.f('ix_roles_deleted_at'), table_name='roles')
+    op.drop_index(op.f('ix_roles_created_at'), table_name='roles')
     op.drop_table('roles')
     op.drop_table('blacklist_tokens')
     # ### end Alembic commands ###

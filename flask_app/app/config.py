@@ -1,5 +1,4 @@
 import json
-import jwt
 
 
 def read_config(file_name="config.json"):

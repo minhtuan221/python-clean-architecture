@@ -1,34 +1,47 @@
-from app.domain.model.user import User
-from app.domain.model.blacklist_token import BlacklistToken
-from app.infrastructure.persistence.user import UserRepository
-from typing import List
-import jwt
 from datetime import datetime, timedelta
+from typing import List
+
+import jwt
+
+from app.domain import validator
 from app.domain.model import errors
+from app.domain.model.user import User
+from app.infrastructure.persistence.user import UserRepository
+from app.pkgs.type_check import type_check
 
 
 class UserUsecase(object):
-    user_repo: UserRepository
 
-    def __init__(self, user_repo, public_key, secret_key=''):
+    def __init__(self, user_repo: UserRepository, public_key, secret_key=''):
         self.user_repo: UserRepository = user_repo
         self.secret_key = secret_key
         self.public_key = public_key
 
-    def create_new_user(self, email: str, password: str, role: str):
+    def validate_user_email_password(self,  email: str, password: str):
+        validator.validate_email(email)
+        validator.validate_password(password)
         current_user = self.user_repo.count_by_email(email)
         if current_user > 0:
             raise errors.email_already_exist
-        user = User(email=email, password=password, role_ids=role)
+
+    def create_new_user(self, email: str, password: str):
+        email = email.lower()
+        self.validate_user_email_password(email, password)
+        user = User(email=email, password=password)
+        user.hash_password(password)
+        # set is_confirm to true
         user.is_confirmed = True
         self.user_repo.create(user)
-        return user
+        return user.to_json()
 
-    def sign_up_new_user(self, email, password, role) -> User:
-        user = User(email=email, password=password, role_ids=role)
+    def sign_up_new_user(self, email: str, password: str):
+        self.validate_user_email_password(email, password)
+        user = User(email=email, password=password)
+        user.hash_password(password)
+        # set is_confirm to False
         user.is_confirmed = False
         self.user_repo.create(user)
-        return user
+        return user.to_json()
 
     def login(self, email: str, password: str):
         user = self.user_repo.find_by_email(email)
@@ -36,36 +49,55 @@ class UserUsecase(object):
             if user.verify_password(password):
                 token = self.encode_auth_token(user)
                 # create and return token here
-                return token.decode("utf-8")
+                return {'token': token.decode("utf-8")}
             else:
-                raise errors.password_verifing_failed
+                raise errors.password_verifying_failed
         raise errors.email_cannot_be_found
 
     def find_by_id(self, user_id: int):
         user: User = self.user_repo.find(user_id)
         if user:
-            return user
-        return None
+            user_dict = user.to_json()
+            # roles = self.user_repo.find_role_by_user(user)
+            # for r in roles:
+            #     user_dict['roles'].append(r.to_json())
+            return user_dict
+        raise errors.record_not_found
 
     def search(self, email: str) -> List[User]:
         users = self.user_repo.search(email)
-        return users
+        res = []
+        for u in users:
+            res.append(u.to_json())
+        return res
 
-    def update(self, user_id: int, user: User):
-        user = self.user_repo.update(user_id, user)
-        return user
-
+    @type_check
     def update_password(self, user_id: int, old_password: str, new_password: str, retype_password: str):
-        user = self.user_repo.update(user_id, user)
-        return user
+        if new_password == retype_password:
+            raise errors.Error(
+                'New Password and retype password is not matched')
+        validator.validate_password(new_password)
+        user = self.find_by_id(user_id)
+        if not user:
+            raise errors.record_not_found
+        if user.verify_password(old_password):
+            # confirm old password
+            user.hash_password(new_password)
+            user = self.user_repo.update(user)
+        return user.to_json()
 
+    @type_check
     def update_is_confirmed(self, user_id: int, is_confirmed: bool):
+        user = self.find_by_id(user_id)
+        if not user:
+            raise errors.record_not_found
+        user.is_confirmed = is_confirmed
         user = self.user_repo.update(user_id, user)
-        return user
+        return user.to_json()
 
     def delete(self, user_id: int):
-        self.user_repo.delete(user_id)
-        return None
+        user = self.user_repo.delete(user_id)
+        return user.to_json()
 
     def encode_auth_token(self, user: User):
         """
@@ -74,7 +106,7 @@ class UserUsecase(object):
         """
         try:
             payload = {
-                'exp': datetime.utcnow() + timedelta(days=0, hours=12, seconds=5),
+                'exp': datetime.utcnow() + timedelta(days=3, seconds=5),
                 'iat': datetime.utcnow(),
                 'sub': user.id
             }
@@ -86,7 +118,7 @@ class UserUsecase(object):
         except Exception as e:
             raise e
 
-    def validate_auth_token(self, auth_token) -> int:
+    def validate_auth_token(self, auth_token):
         """
         Validates the auth token and check blacklist token
         :param auth_token:

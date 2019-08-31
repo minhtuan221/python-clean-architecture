@@ -1,8 +1,9 @@
-from datetime import datetime, timedelta
-from typing import Optional
-from collections import namedtuple
-from sqlalchemy import Column, String, Integer, DateTime, Text, Boolean
+import datetime
+
+from sqlalchemy import Column, String, Integer, DateTime
+
 from .base import Base
+
 
 class BlacklistToken(Base):
     """
@@ -12,8 +13,7 @@ class BlacklistToken(Base):
 
     id: int = Column(Integer, primary_key=True, autoincrement=True)
     token: str = Column(String(500), unique=True, nullable=False)
-    blacklisted_on: datetime = Column(DateTime, nullable=False)
-    user_id: int = Column(Integer, nullable=False)
+    blacklisted_on: datetime.datetime = Column(DateTime, nullable=False)
 
     def __repr__(self):
         return '<id: token: {}'.format(self.token)

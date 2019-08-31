@@ -1,5 +1,5 @@
 from app.domain.model.base import ConnectionPool
-from app.domain.model.user import User
+from app.domain.model.user import User, Role
 from app.domain.model.blacklist_token import BlacklistToken
 from datetime import datetime
 from typing import List
@@ -11,7 +11,6 @@ class UserRepository(object):
 
     def create(self, user: User) -> User:
         with self.db.new_session() as db:
-            user.hash_password(user.password)
             user.created_at = datetime.now()
             user.updated_at = datetime.now()
             db.session.add(user)
@@ -22,15 +21,22 @@ class UserRepository(object):
             user: User = db.session.query(User).filter_by(
                 id=user_id).filter(User.deleted_at == None).first()
         return user
+    
+    def find_role_by_user(self, user: User):
+        with self.db.new_session() as db:
+            role: List[Role] = db.session.query(User).get(user.id).roles.all()
+        return role
 
     def find_by_email(self, email: str) -> User:
         with self.db.new_session() as db:
-            user: User = db.session.query(User).filter_by(email=email).first()
+            user: User = db.session.query(User).filter_by(
+                email=email).filter(User.deleted_at == None).first()
         return user
 
     def count_by_email(self, email: str) -> int:
         with self.db.new_session() as db:
-            total: int = db.session.query(User).filter_by(email=email).count()
+            total: int = db.session.query(User).filter_by(
+                email=email).filter(User.deleted_at == None).count()
         return total
 
     def search(self, email: str) -> List[User]:
@@ -39,21 +45,30 @@ class UserRepository(object):
                 User.email.like(f'%{email}%')).filter(User.deleted_at == None).all()
         return users
 
-    def update(self, user_id: int, user: User) -> User:
+    def update(self, user: User) -> User:
         with self.db.new_session() as db:
-            current_user: User = db.session.query(User) \
-                .filter_by(id=user_id) \
-                .first()
-            current_user.role_ids = user.role_ids
-            current_user.hash_password(user.password)
-            current_user.updated_at = datetime.now()
-        return current_user
+            user.updated_at = datetime.now()
+            db.session.add(user)
+        return user
 
     def delete(self, user_id: int):
         with self.db.new_session() as db:
-            user: User = db.session.query(User).filter(
-                User.id == user_id).first()
+            user: User = self.find(user_id)
             user.deleted_at = datetime.now()
+            db.session.add(user)
+        return user
+    
+    def append_role(self, user: User, role: Role) -> User:
+        with self.db.new_session() as db:
+            user.roles.append(role)
+            db.session.add(user)
+        return user
+    
+    def remove_role(self, user: User, role: Role) -> User:
+        with self.db.new_session() as db:
+            user.roles.remove(role)
+            db.session.add(user)
+        return user
 
     def check_blacklist(self, auth_token):
         # check whether auth token has been blacklisted

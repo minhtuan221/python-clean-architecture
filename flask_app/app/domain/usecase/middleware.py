@@ -1,13 +1,15 @@
 from flask import jsonify, g, request
 from functools import wraps
 from app.domain.model.errors import Error, HttpStatusCode
+from app.domain.model import errors
 from app.domain.usecase.user import UserUsecase
+import traceback
 
 class Middleware(object):
     def __init__(self, a: UserUsecase):
         self.user_usecase = a
     
-    def json(self, func):
+    def error_handler(self, func):
         """Contain handler for json and error exception. Accept only one value (not tuple) and should be a dict/list
         
         Arguments:
@@ -20,11 +22,11 @@ class Middleware(object):
         def wrapper(*args, **kwargs):
             try:
                 res = func(*args, **kwargs)
+            except Error as e:
+                return jsonify(e.to_json()), e.code()
             except Exception as e:
-                if type(e) is Error:
-                    return jsonify(e.to_json()), e.code()
-                raise e
-                # return jsonify(data=None, error=f'Unknown error: {str(e)}'), HttpStatusCode.Internal_Server_Error
+                traceback.print_exc()
+                return jsonify(data=None, error=f'Unknown error: {str(e)}'), HttpStatusCode.Internal_Server_Error
             if res is not None:
                 if type(res) is Error:
                     return jsonify(res.to_json()), res.code()
@@ -40,15 +42,15 @@ class Middleware(object):
             try:
                 auth_type, token = request.headers['Authorization'].split(None, 1)
             except ValueError:
-                raise Exception('The Authorization header is either empty or has no token')
+                raise errors.authorization_header_empty
         else:
-            raise Exception('The Authorization header is either empty or has no token')
+            raise errors.authorization_header_empty
 
         # if the auth type does not match, we act as if there is no auth
         # this is better than failing directly, as it allows the callback
         # to handle special cases, like supporting multiple auth types
         if auth_type!='Bearer':
-            raise Exception('The Authorization header is either empty or has no token') 
+            raise errors.authorization_type_wrong
         return token
 
     def verify_auth_token(self, f):

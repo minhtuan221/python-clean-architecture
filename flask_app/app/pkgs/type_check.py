@@ -1,8 +1,6 @@
-from typing import get_type_hints, Any
-import typing
 from functools import wraps
 from inspect import getfullargspec
-import traceback
+from typing import get_type_hints, Any
 
 
 def check_origin_type(result, requirement):
