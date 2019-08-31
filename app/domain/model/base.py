@@ -8,7 +8,8 @@ from sqlalchemy.orm import scoped_session
 Base = declarative_base()
 
 # It's must to list all model here
-from app.domain.model.user import User, UserRole, Role, PermissionPolicy
+from app.domain.model.user import User, UserRole
+from .role import Role, PermissionPolicy
 from app.domain.model.blacklist_token import BlacklistToken
 
 

@@ -2,7 +2,8 @@ from typing import List
 
 from app.domain import validator
 from app.domain.model import errors
-from app.domain.model.user import Role, User, PermissionPolicy
+from app.domain.model.user import Role, User
+from app.domain.model.role import PermissionPolicy
 from app.infrastructure.persistence.role import RoleRepository
 from app.infrastructure.persistence.user import UserRepository
 
@@ -19,7 +20,7 @@ class UserRoleService(object):
         validator.validate_name(name)
         role = Role(name=name, description=description)
         role = self.role_repo.create(role)
-        return role.to_json()
+        return role
 
     def find_by_id(self, role_id: int):
         role: Role = self.role_repo.find(role_id)
@@ -54,7 +55,7 @@ class UserRoleService(object):
         if not role:
             raise errors.record_not_found
         u = self.user_repo.append_role(user, role)
-        return u.to_json()
+        return u
 
     def remove_role_to_user(self, user_id: int, role_id: int):
         user = self.user_repo.find(user_id)
@@ -64,24 +65,21 @@ class UserRoleService(object):
         if not role:
             raise errors.record_not_found
         u = self.user_repo.remove_role(user, role)
-        return u.to_json()
+        return u
 
     def append_permission_to_role(self, role_id: int, permission: str):
         role = self.role_repo.find(role_id)
         if not role:
             raise errors.record_not_found
         self.role_repo.append_permission(role, permission)
-        return role.to_json()
+        return role
 
     def view_permission_to_role(self, role_id: int):
         role = self.role_repo.find(role_id)
         if not role:
             raise errors.record_not_found
         permissions: List[PermissionPolicy] = self.role_repo.find_permission(role)
-        permissions_list = []
-        for p in permissions:
-            permissions_list.append(p.to_json())
-        return permissions_list
+        return permissions
 
     def view_permission_to_user(self, user_id: int):
         user: User = self.user_repo.find(user_id)
@@ -91,15 +89,12 @@ class UserRoleService(object):
         if not role:
             raise errors.record_not_found
         permissions = self.role_repo.find_permission_by_roles(role)
-        permissions_list = []
-        for p in permissions:
-            permissions_list.append(p.to_json()['permission'])
-        return permissions_list
+        return permissions
 
     def remove_permission_to_role(self, role_id: int, permission: str):
         role = self.role_repo.find(role_id)
         if not role:
             raise errors.record_not_found
         permission = PermissionPolicy(role_id=role_id, permission=permission)
-        self.role_repo.remove_permission(role, permission)
-        return role.to_json()
+        r = self.role_repo.remove_permission(role, permission)
+        return r

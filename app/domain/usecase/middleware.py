@@ -2,14 +2,16 @@ from flask import jsonify, g, request
 from functools import wraps
 from app.domain.model.errors import Error, HttpStatusCode
 from app.domain.model import errors
-from app.domain.usecase.user import UserUsecase
+from app.domain.usecase.user import UserService
 import traceback
 
+
 class Middleware(object):
-    def __init__(self, a: UserUsecase):
-        self.user_usecase = a
-    
-    def error_handler(self, func):
+    def __init__(self, a: UserService):
+        self.user_service = a
+
+    @staticmethod
+    def error_handler(func):
         """Contain handler for json and error exception. Accept only one value (not tuple) and should be a dict/list
         
         Arguments:
@@ -18,6 +20,7 @@ class Middleware(object):
         Returns:
             [type] -- [description]
         """
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             try:
@@ -32,9 +35,11 @@ class Middleware(object):
                     return jsonify(res.to_json()), res.code()
                 return jsonify(data=res)
             return jsonify(data=[])
+
         return wrapper
-    
-    def get_bearer_token(self):
+
+    @staticmethod
+    def get_bearer_token():
         if 'Authorization' in request.headers:
             # Flask/Werkzeug do not recognize any authentication types
             # other than Basic or Digest or bearer, so here we parse the header by
@@ -49,7 +54,7 @@ class Middleware(object):
         # if the auth type does not match, we act as if there is no auth
         # this is better than failing directly, as it allows the callback
         # to handle special cases, like supporting multiple auth types
-        if auth_type!='Bearer':
+        if auth_type != 'Bearer':
             raise errors.authorization_type_wrong
         return token
 
@@ -63,11 +68,12 @@ class Middleware(object):
             # to avoid unwanted interactions with CORS.
             if request.method != 'OPTIONS':  # pragma: no cover
                 token = self.get_bearer_token()
-                user_id = self.user_usecase.validate_auth_token(token)
-                user = self.user_usecase.find_by_id(user_id)
+                user_id = self.user_service.validate_auth_token(token)
+                user = self.user_service.find_by_id(user_id)
                 if user:
                     g.user = user
             return f(*args, **kwargs)
+
         return decorated
 
 
@@ -78,5 +84,7 @@ def requires_permission(sPermission):
             # if sPermission in lPermissions:
             #     return fn(*args, **kwargs)
             raise Exception("permission denied")
+
         return decorated
+
     return decorator

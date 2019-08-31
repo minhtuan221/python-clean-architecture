@@ -1,6 +1,7 @@
 from flask import Blueprint, request
 
-from app.cmd.http import user_usecase, middleware, user_role_service
+from app.cmd.http import user_service, middleware, user_role_service
+from app.domain.model.user import User
 
 user_controller = Blueprint('user_controller', __name__)
 
@@ -17,7 +18,7 @@ def login():
     content: dict = request.get_json(silent=True)
     email = content.get('email', '')
     password = content.get('password', '')
-    token = user_usecase.login(email, password)
+    token = user_service.login(email, password)
     return {'token': token}
 
 
@@ -27,8 +28,8 @@ def create_new_user_by_admin():
     content: dict = request.get_json(silent=True)
     email = content.get('email', '')
     password = content.get('password', '')
-    user = user_usecase.create_new_user(email, password)
-    return user
+    user = user_service.create_new_user(email, password)
+    return user.to_json()
 
 
 @user_controller.route('/admin/users', methods=['GET'])
@@ -36,7 +37,10 @@ def create_new_user_by_admin():
 @middleware.verify_auth_token
 def find_all():
     search_word = request.args.get('email', '')
-    users = user_usecase.search(search_word)
+    users = user_service.search(search_word)
+    res = []
+    for u in users:
+        res.append(u.to_json())
     return users
 
 
@@ -44,10 +48,10 @@ def find_all():
 @middleware.error_handler
 @middleware.verify_auth_token
 def find_one(id):
-    user = user_usecase.find_by_id(id)
+    user: User = user_service.find_by_id(id)
     if user:
-        return user
-    return None
+        return user.to_json()
+    return {}
 
 
 @user_controller.route('/users/<id>/password', methods=['PUT'])
@@ -57,7 +61,8 @@ def update_password(id):
     old_password = content.get('old_password', '')
     new_password = content.get('new_password', '')
     retype_password = content.get('retype_password', '')
-    return user_usecase.update_password(id, old_password, new_password, retype_password)
+    user = user_service.update_password(id, old_password, new_password, retype_password)
+    return user.to_json()
 
 
 @user_controller.route('/users/<id>/confirm', methods=['PUT'])
@@ -66,8 +71,8 @@ def update_password(id):
 def update_is_confirmed(id):
     content: dict = request.get_json(silent=True)
     is_confirmed = content.get('is_confirmed', False)
-    user = user_usecase.update_is_confirmed(int(id), is_confirmed)
-    return user
+    user = user_service.update_is_confirmed(int(id), is_confirmed)
+    return user.to_json()
 
 
 @user_controller.route('/admin/roles', methods=['POST'])
@@ -77,7 +82,8 @@ def create_new_role():
     content: dict = request.get_json(silent=True)
     name = content.get('name', '')
     description = content.get('description', '')
-    return user_role_service.create_new_role(name, description)
+    role = user_role_service.create_new_role(name, description)
+    return role.to_json()
 
 
 @user_controller.route('/admin/users/roles', methods=['POST'])
@@ -87,7 +93,8 @@ def append_role_to_user_by_admin():
     content: dict = request.get_json(silent=True)
     user_id = content.get('user_id', '')
     role_id = content.get('role_id', '')
-    return user_role_service.append_role_to_user(user_id, role_id)
+    user = user_role_service.append_role_to_user(user_id, role_id)
+    return user.to_json()
 
 
 @user_controller.route('/admin/users/roles', methods=['PUT'])
@@ -97,7 +104,8 @@ def remove_role_to_user_by_admin():
     content: dict = request.get_json(silent=True)
     user_id = content.get('user_id', '')
     role_id = content.get('role_id', '')
-    return user_role_service.remove_role_to_user(user_id, role_id)
+    u = user_role_service.remove_role_to_user(user_id, role_id)
+    return u.to_json()
 
 
 @user_controller.route('/admin/roles/permissions', methods=['POST'])
@@ -107,21 +115,30 @@ def append_permission_to_role_by_admin():
     content: dict = request.get_json(silent=True)
     role_id = content.get('role_id', '')
     permission = content.get('permission', '')
-    return user_role_service.append_permission_to_role(role_id, permission)
+    r = user_role_service.append_permission_to_role(role_id, permission)
+    return r.to_json()
 
 
 @user_controller.route('/admin/roles/<role_id>/permissions', methods=['GET'])
 @middleware.error_handler
 @middleware.verify_auth_token
 def view_permission_to_role_by_admin(role_id):
-    return user_role_service.view_permission_to_role(int(role_id))
+    permissions = user_role_service.view_permission_to_role(int(role_id))
+    permissions_list = []
+    for p in permissions:
+        permissions_list.append(p.to_json())
+    return permissions_list
 
 
 @user_controller.route('/admin/users/<user_id>/permissions', methods=['GET'])
 @middleware.error_handler
 @middleware.verify_auth_token
 def view_permission_to_user_by_admin(user_id):
-    return user_role_service.view_permission_to_user(int(user_id))
+    permissions = user_role_service.view_permission_to_user(int(user_id))
+    permissions_list = []
+    for p in permissions:
+        permissions_list.append(p.to_json())
+    return permissions_list
 
 
 @user_controller.route('/admin/roles/permissions', methods=['PUT'])
@@ -131,7 +148,8 @@ def remove_permission_to_role_by_admin():
     content: dict = request.get_json(silent=True)
     user_id = content.get('user_id', '')
     role_id = content.get('role_id', '')
-    return user_role_service.remove_permission_to_role(user_id, role_id)
+    r = user_role_service.remove_permission_to_role(user_id, role_id)
+    return r.to_json()
 
 
 @user_controller.route('/users/<id>', methods=['DELETE'])

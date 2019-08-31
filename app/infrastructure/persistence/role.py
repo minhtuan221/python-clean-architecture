@@ -1,5 +1,5 @@
 from app.domain.model.base import ConnectionPool
-from app.domain.model.user import Role, PermissionPolicy
+from app.domain.model.role import Role, PermissionPolicy
 from datetime import datetime
 from typing import List
 

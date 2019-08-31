@@ -1,5 +1,5 @@
 from flask import Flask
-from app.domain.usecase.user import UserUsecase
+from app.domain.usecase.user import UserService
 from app.domain.usecase.user_role import UserRoleService
 from app.infrastructure.persistence.user import UserRepository
 from app.infrastructure.persistence.role import RoleRepository
@@ -14,12 +14,12 @@ center_store = CenterStore(cli_config)
 user_repository = UserRepository(center_store.connection_pool)
 role_repository = RoleRepository(center_store.connection_pool)
 
-user_usecase = UserUsecase(
+user_service = UserService(
     user_repository, cli_config.PUBLIC_KEY, secret_key=cli_config.PRIVATE_KEY)
 
 user_role_service = UserRoleService(role_repository, user_repository)
 
-middleware = Middleware(user_usecase)
+middleware = Middleware(user_service)
 
 
 def create_app(config_object):
