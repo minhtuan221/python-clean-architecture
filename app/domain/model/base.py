@@ -11,6 +11,7 @@ Base = declarative_base()
 from app.domain.model.user import User, UserRole
 from .role import Role, PermissionPolicy
 from app.domain.model.blacklist_token import BlacklistToken
+from .access_policy import AccessPolicy
 
 
 class ConnectionPool(object):

@@ -44,11 +44,14 @@ class RoleRepository(object):
             p: List[PermissionPolicy] = db.session.query(Role).get(role.id).permissions.all()
         return p
 
-    def find_permission_by_roles(self, roles: List[Role]):
+    def find_one_permission(self, role_id: int, permission: str) -> PermissionPolicy:
         with self.db.new_session() as db:
-            role_ids = []
-            for r in roles:
-                role_ids.append(r.id)
+            p: PermissionPolicy = db.session.query(PermissionPolicy).filter(PermissionPolicy.role_id == role_id).filter(
+                PermissionPolicy.permission == permission).first()
+        return p
+
+    def find_permission_by_role_ids(self, role_ids: List[int]):
+        with self.db.new_session() as db:
             p: List[PermissionPolicy] = db.session.query(PermissionPolicy).filter(
                 PermissionPolicy.role_id.in_(role_ids)).all()
         return p

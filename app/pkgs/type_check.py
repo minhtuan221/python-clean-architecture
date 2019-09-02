@@ -59,7 +59,8 @@ def validate_input(func, **kwargs):
 
 
 def type_check(decorator):
-    """Function check all type of input argument and return value of 'def' as specified in typing module (from python 3.3). It will raise Type Error if any wrong type.
+    """Function check all type of input argument and return value of 'def' as specified in typing module (from python 3.3).
+    It will raise Type Error if any wrong type. Cannot work correctly with List[object], Dict[object], Tuple, ...
 
     Arguments:
         decorator {[type]} -- [description]
@@ -78,7 +79,7 @@ def type_check(decorator):
         func_defaults = [arg for arg in func_args if arg not in kwargs]
         # print('func_args=', func_args, 'kwargs=', kwargs)
         # print('func_defaults=', func_defaults,
-            #   'default_kwargs=', default_kwargs)
+        #   'default_kwargs=', default_kwargs)
         kwargs.update(dict(zip(func_defaults, default_kwargs)))
         return validate_input(decorator, **kwargs)
 

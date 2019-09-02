@@ -1,6 +1,6 @@
 from functools import wraps
 from flask import jsonify
-from app.domain.model.errors import Error, HttpStatusCode
+from app.pkgs.errors import Error, HttpStatusCode
 
 
 class JsonResponse(object):
@@ -22,7 +22,7 @@ def json(func):
             res = func(*args, **kwargs)
         except Exception as e:
             if type(e) is Error:
-                print(str(e))
+                # print(str(e))
                 return jsonify(e.to_json()), e.code()
             return jsonify(data=None, error=f'Unknown error: {str(e)}'), HttpStatusCode.Internal_Server_Error
         if isinstance(res, JsonResponse):

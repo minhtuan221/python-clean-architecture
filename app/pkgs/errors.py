@@ -49,3 +49,5 @@ authorization_type_wrong = Error(
     'The Authorization header is wrong type or invalid', HttpStatusCode.Unauthorized)
 unconfirmed_email = Error(
     'The email address is not confirmed', HttpStatusCode.Unauthorized)
+reset_access_policy = Error(
+    'Token expired because of changing in user and role' , HttpStatusCode.Forbidden)

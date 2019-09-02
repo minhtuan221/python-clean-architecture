@@ -11,6 +11,7 @@ from sqlalchemy.orm import relationship
 from .base import Base
 from .role import Role
 
+
 class User(Base):
     __tablename__ = 'users'
     id: int = Column(Integer, primary_key=True)
@@ -19,7 +20,7 @@ class User(Base):
     is_confirmed: bool = Column(Boolean, default=False)
 
     roles: List[Role] = relationship("Role", secondary='user_role',
-                               backref="user", lazy='dynamic')
+                                     backref="user", lazy='dynamic')
 
     created_at: datetime = Column(
         DateTime, index=True, default=datetime.utcnow)
@@ -52,10 +53,10 @@ class User(Base):
     def hash_password(self, password):
         """Hash a password for storing."""
         salt = hashlib.sha256(os.urandom(60)).hexdigest().encode('ascii')
-        pwdhash = hashlib.pbkdf2_hmac('sha512', password.encode('utf-8'),
-                                      salt, 100000)
-        pwdhash = binascii.hexlify(pwdhash)
-        self.password = (salt + pwdhash).decode('ascii')
+        password_hash = hashlib.pbkdf2_hmac('sha512', password.encode('utf-8'),
+                                            salt, 100000)
+        password_hash = binascii.hexlify(password_hash)
+        self.password = (salt + password_hash).decode('ascii')
         return self.password
 
     def verify_password(self, provided_password):

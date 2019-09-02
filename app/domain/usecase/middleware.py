@@ -1,7 +1,7 @@
 from flask import jsonify, g, request
 from functools import wraps
-from app.domain.model.errors import Error, HttpStatusCode
-from app.domain.model import errors
+from app.pkgs.errors import Error, HttpStatusCode
+from app.pkgs import errors
 from app.domain.usecase.user import UserService
 import traceback
 
@@ -9,6 +9,7 @@ import traceback
 class Middleware(object):
     def __init__(self, a: UserService):
         self.user_service = a
+        self.permissions_list = set()
 
     @staticmethod
     def error_handler(func):
@@ -68,23 +69,30 @@ class Middleware(object):
             # to avoid unwanted interactions with CORS.
             if request.method != 'OPTIONS':  # pragma: no cover
                 token = self.get_bearer_token()
-                user_id = self.user_service.validate_auth_token(token)
-                user = self.user_service.find_by_id(user_id)
-                if user:
-                    g.user = user
+                payload = self.user_service.validate_auth_token(token)
+                # print(payload)
+                accept = self.user_service.is_accessible(payload['sub'], payload['role_ids'], payload['iat'])
+                if not accept:
+                    raise errors.reset_access_policy
+                g.user = payload['user']
+                g.roles = payload['role_ids']
+                g.permissions = payload['permissions']
+                g.auth_token = token
             return f(*args, **kwargs)
 
         return decorated
 
+    def require_permissions(self, *permissions):
+        self.permissions_list.update(permissions)
 
-def requires_permission(sPermission):
-    def decorator(fn):
-        def decorated(*args, **kwargs):
-            # lPermissions = get_permissions(current_user_id())
-            # if sPermission in lPermissions:
-            #     return fn(*args, **kwargs)
-            raise Exception("permission denied")
+        def check_permission(fn):
+            @wraps(fn)
+            def permit(*args, **kwargs):
+                p_set = set(permissions)
+                g_permissions = set(g.permissions)
+                if p_set.issubset(g_permissions):
+                    return fn(*args, **kwargs)
+                raise Error("permission denied")
+            return permit
 
-        return decorated
-
-    return decorator
+        return check_permission
