@@ -2,7 +2,7 @@ import datetime
 
 from sqlalchemy import Column, String, Integer, DateTime
 
-from .base import Base
+from app.domain.model import Base
 
 
 class BlacklistToken(Base):

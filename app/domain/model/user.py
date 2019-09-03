@@ -8,7 +8,7 @@ from typing import Optional, List
 from sqlalchemy import Column, String, Integer, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 
-from .base import Base
+from . import Base
 from .role import Role
 
 

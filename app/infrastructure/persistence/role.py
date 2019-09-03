@@ -1,4 +1,4 @@
-from app.domain.model.base import ConnectionPool
+from app.domain.model import ConnectionPool
 from app.domain.model.role import Role, PermissionPolicy
 from datetime import datetime
 from typing import List
@@ -19,6 +19,12 @@ class RoleRepository(object):
         with self.db.new_session() as db:
             role: Role = db.session.query(Role).filter_by(
                 id=role_id).filter(Role.deleted_at == None).first()
+        return role
+
+    def find_by_name(self, name: str) -> Role:
+        with self.db.new_session() as db:
+            role: Role = db.session.query(Role).filter_by(
+                name=name).filter(Role.deleted_at == None).first()
         return role
 
     def search(self, name: str) -> List[Role]:

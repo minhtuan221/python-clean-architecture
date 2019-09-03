@@ -1,3 +1,7 @@
+from functools import wraps
+from logging import Logger
+
+
 class HttpStatusCode(object):
     OK = 200
     Not_Modified = 304
@@ -31,6 +35,28 @@ class Error(Exception):
         return self.message
 
 
+def error_handler(func):
+    """Contain handler for json and error exception. Accept only one value (not tuple) and should be a dict/list
+
+    Arguments:
+        func {[type]} -- [description]
+
+    Returns:
+        [type] -- [description]
+    """
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            res = func(*args, **kwargs)
+        except Error as e:
+            return e
+        except Exception as e:
+            return Error(f'Unknown error: {str(e)}')
+        return res
+    return wrapper
+
+
 record_not_found = Error('Record not found')
 email_already_exist = Error('Email already exist', HttpStatusCode.Bad_Request)
 email_cannot_be_found = Error(
@@ -50,4 +76,5 @@ authorization_type_wrong = Error(
 unconfirmed_email = Error(
     'The email address is not confirmed', HttpStatusCode.Unauthorized)
 reset_access_policy = Error(
-    'Token expired because of changing in user and role' , HttpStatusCode.Forbidden)
+    'Token expired because of changing in user and role', HttpStatusCode.Forbidden)
+role_name_already_exist = Error('role name already exist', HttpStatusCode.Bad_Request)

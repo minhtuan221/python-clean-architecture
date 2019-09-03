@@ -1,7 +1,6 @@
-from app.domain.model.base import ConnectionPool, AccessPolicy, Role, User
-import datetime
+from app.domain.model import ConnectionPool, AccessPolicy, Role, User
+from datetime import datetime
 from sqlalchemy import or_
-from typing import List
 
 
 class AccessPolicyRepository(object):
@@ -11,7 +10,7 @@ class AccessPolicyRepository(object):
     def change_user(self, user: User, note: object = 'change in user') -> object:
         with self.db.new_session() as db:
             checker = AccessPolicy(user_id=user.id, note=note)
-            checker.denied_before = datetime.utcnow(), datetime.utcnow()
+            checker.denied_before = datetime.utcnow()
             db.session.add(checker)
         return checker
 

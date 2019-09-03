@@ -5,7 +5,7 @@ from typing import Optional
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
-from .base import Base
+from app.domain.model import Base
 
 
 class Role(Base):

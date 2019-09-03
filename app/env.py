@@ -17,7 +17,7 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from app.domain.model.base import Base
+from app.domain.model import Base
 target_metadata = Base.metadata
 # target_metadata = None
 

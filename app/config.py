@@ -21,6 +21,7 @@ class Config(object):
     DB_SERVER = '0.0.0.0'
     PORT = 5010
     DATABASE_URL = "sqlite:///./test.db"
+    LOG_FOLDER = './logs'
     PRIVATE_KEY = open(private_key_file).read()
     PUBLIC_KEY = open(public_key_file).read()
 

@@ -3,7 +3,7 @@ import datetime
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
 from typing import Optional
 
-from .base import Base
+from app.domain.model import Base
 
 
 class AccessPolicy(Base):

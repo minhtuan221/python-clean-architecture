@@ -1,6 +1,6 @@
-from app.domain.model.base import ConnectionPool
+from app.domain.model import ConnectionPool
 from app.domain.model.user import User, Role
-from app.domain.model.base import PermissionPolicy
+from app.domain.model import PermissionPolicy
 from app.domain.model.blacklist_token import BlacklistToken
 from app.pkgs import errors
 from datetime import datetime
@@ -31,10 +31,10 @@ class UserRepository(object):
             if not user:
                 raise errors.record_not_found
             roles: List[Role] = user.roles.all()
-            permissions = []
+            roles_ids: List[int] = []
             for role in roles:
-                p: List[PermissionPolicy] = role.permissions.all()
-                permissions.extend(p)
+                roles_ids.append(role.id)
+            permissions = db.session.query(PermissionPolicy).filter(PermissionPolicy.role_id.in_(roles_ids)).all()
         return user, roles, permissions
 
     def find_all_user_info_by_id(self, user_id: int):
@@ -44,10 +44,10 @@ class UserRepository(object):
             if not user:
                 raise errors.record_not_found
             roles: List[Role] = user.roles.all()
-            permissions = []
+            roles_ids: List[int] = []
             for role in roles:
-                p: List[PermissionPolicy] = role.permissions.all()
-                permissions.extend(p)
+                roles_ids.append(role.id)
+            permissions = db.session.query(PermissionPolicy).filter(PermissionPolicy.role_id.in_(roles_ids)).all()
         return user, roles, permissions
 
     def find_by_email(self, email: str) -> User:

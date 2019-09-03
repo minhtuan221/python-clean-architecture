@@ -7,7 +7,7 @@ from app.infrastructure.persistence.access_policy import AccessPolicyRepository
 from app.infrastructure.persistence.blacklist_token import BlacklistTokenRepository
 from app.config import cli_config
 from app.cmd.center_store import CenterStore
-from app.domain.usecase.middleware import Middleware
+from app.infrastructure.http.middleware import Middleware, set_logger
 
 # print('cli_config.__dict__', cli_config.__dict__)
 
@@ -21,22 +21,43 @@ blacklist_token_repository = BlacklistTokenRepository(center_store.connection_po
 user_role_service = UserRoleService(role_repository, user_repository, access_policy_repository)
 
 user_service = UserService(
-    user_repository, access_policy_repository, blacklist_token_repository, cli_config.PUBLIC_KEY, secret_key=cli_config.PRIVATE_KEY)
+    user_repository, access_policy_repository, blacklist_token_repository, cli_config.PUBLIC_KEY,
+    secret_key=cli_config.PRIVATE_KEY)
 
-middleware = Middleware(user_service)
+middleware = Middleware(user_service, center_store.logger)
+
+
+def create_first_time_config(admin_email, admin_password):
+    admin = user_service.user_repo.find_by_email(admin_email)
+    if not admin:
+        admin = user_service.create_new_user(admin_email, admin_password)
+
+    admin_role = user_role_service.role_repo.find_by_name('admin')
+    if not admin_role:
+        admin_role = user_role_service.create_new_role('admin', 'Admin role with super power')
+    try:
+        user_role_service.append_permission_to_role(admin_role.id, 'admin')
+    except Exception as e:
+        print('permission admin already exist', e)
+    try:
+        user_role_service.append_role_to_user(admin.id, admin_role.id)
+    except Exception as e:
+        raise e
 
 
 def create_app(config_object):
-    app: Flask = Flask(__name__)
-    app.config.from_object(config_object)
+    flask_app: Flask = Flask(__name__)
+    flask_app.config.from_object(config_object)
 
     from app.infrastructure.http.user import user_controller
-    from app.infrastructure.http.admin import  admin_controller
+    from app.infrastructure.http.admin import admin_controller
 
-    app.register_blueprint(user_controller)
-    app.register_blueprint(admin_controller)
+    flask_app.register_blueprint(user_controller)
+    flask_app.register_blueprint(admin_controller)
 
-    return app
+    set_logger(center_store.logger, flask_app)
+
+    return flask_app
 
 
 app = create_app(cli_config)

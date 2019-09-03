@@ -1,23 +1,29 @@
-from flask import jsonify, g, request
-from functools import wraps
-from app.pkgs.errors import Error, HttpStatusCode
-from app.pkgs import errors
-from app.domain.usecase.user import UserService
+import datetime
+import time
 import traceback
+from functools import wraps
+from logging import Logger
+
+from flask import Flask, request, g
+from flask import jsonify
+
+from app.domain.usecase.user import UserService
+from app.pkgs import errors
+from app.pkgs.errors import Error, HttpStatusCode
 
 
 class Middleware(object):
-    def __init__(self, a: UserService):
+    def __init__(self, a: UserService, logger: Logger):
         self.user_service = a
         self.permissions_list = set()
+        self.logger = logger
 
-    @staticmethod
-    def error_handler(func):
+    def error_handler(self, func):
         """Contain handler for json and error exception. Accept only one value (not tuple) and should be a dict/list
-        
+
         Arguments:
             func {[type]} -- [description]
-        
+
         Returns:
             [type] -- [description]
         """
@@ -29,11 +35,9 @@ class Middleware(object):
             except Error as e:
                 return jsonify(e.to_json()), e.code()
             except Exception as e:
-                traceback.print_exc()
+                self.logger.error(e, exc_info=True)
                 return jsonify(data=None, error=f'Unknown error: {str(e)}'), HttpStatusCode.Internal_Server_Error
             if res is not None:
-                if type(res) is Error:
-                    return jsonify(res.to_json()), res.code()
                 return jsonify(data=res)
             return jsonify(data=[])
 
@@ -83,16 +87,63 @@ class Middleware(object):
         return decorated
 
     def require_permissions(self, *permissions):
+        """
+        Require on of the following permissions to pass over:
+        :param permissions:
+        :return:
+        """
         self.permissions_list.update(permissions)
 
         def check_permission(fn):
             @wraps(fn)
             def permit(*args, **kwargs):
-                p_set = set(permissions)
-                g_permissions = set(g.permissions)
-                if p_set.issubset(g_permissions):
-                    return fn(*args, **kwargs)
+                for p in permissions:
+                    if p in g.permissions:
+                        return fn(*args, **kwargs)
                 raise Error("permission denied")
+
             return permit
 
         return check_permission
+
+
+def set_logger(logger: Logger, app: Flask):
+    @app.before_request
+    def start_timer():
+        g.start = time.time()
+
+    @app.after_request
+    def log_request(response):
+
+        now = time.time()
+        duration = '[%2.4f ms]' % ((now - g.start) * 1000)
+
+        ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+        host = request.host.split(':', 1)[0]
+        args = dict(request.args)
+        timestamp = datetime.datetime.utcnow()
+
+        log_params = [
+            ('method', request.method, 'blue'),
+            ('path', request.path, 'blue'),
+            ('status', response.status_code, 'yellow'),
+            ('duration', duration, 'green'),
+            ('utc_time', timestamp, 'magenta'),
+            ('ip', ip, 'red'),
+            ('host', host, 'red'),
+            ('params', args, 'blue')
+        ]
+
+        request_id = request.headers.get('X-Request-ID')
+        if request_id:
+            log_params.append(('request_id', request_id, 'yellow'))
+
+        parts = []
+        for name, value, _color in log_params:
+            part = f'{name}=[{value}]'
+            parts.append(part)
+        line = " ".join(parts)
+
+        logger.info(line)
+
+        return response

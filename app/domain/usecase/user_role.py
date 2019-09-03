@@ -22,6 +22,9 @@ class UserRoleService(object):
         description = description.lower()
         validator.validate_name(name)
         role = Role(name=name, description=description)
+        r = self.role_repo.find_by_name(name)
+        if r:
+            raise errors.role_name_already_exist
         role = self.role_repo.create(role)
         return role
 

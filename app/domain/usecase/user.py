@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Set
 
 import jwt
 
@@ -55,9 +55,9 @@ class UserService(object):
                 role_ids = []
                 for r in roles:
                     role_ids.append(r.id)
-                permissions_name = []
+                permissions_name: Set[str] = set()
                 for p in permissions:
-                    permissions_name.append(p.permission)
+                    permissions_name.add(p.permission)
                 other_info = {
                     'user': {
                         'id': user.id,
@@ -65,7 +65,7 @@ class UserService(object):
                         'is_confirmed': user.is_confirmed
                     },
                     'role_ids': role_ids,
-                    'permissions': permissions_name
+                    'permissions': list(permissions_name)
                 }
                 token = self.encode_auth_token(user, other_payload_info=other_info)
                 # create and return token here
