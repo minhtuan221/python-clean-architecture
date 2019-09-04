@@ -6,3 +6,5 @@ pyjwt==1.7.1
 cryptography==2.6.1
 pycryptodomex==3.9.0
 alembic==1.1.0
+gunicorn==19.9.0
+pymysql=0.9.3

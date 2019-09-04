@@ -76,5 +76,5 @@ authorization_type_wrong = Error(
 unconfirmed_email = Error(
     'The email address is not confirmed', HttpStatusCode.Unauthorized)
 reset_access_policy = Error(
-    'Token expired because of changing in user and role', HttpStatusCode.Forbidden)
+    'Token expired because of changing in user and role', HttpStatusCode.Unauthorized)
 role_name_already_exist = Error('role name already exist', HttpStatusCode.Bad_Request)

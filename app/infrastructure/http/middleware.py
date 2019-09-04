@@ -75,9 +75,9 @@ class Middleware(object):
                 token = self.get_bearer_token()
                 payload = self.user_service.validate_auth_token(token)
                 # print(payload)
-                accept = self.user_service.is_accessible(payload['sub'], payload['role_ids'], payload['iat'])
+                accept, note = self.user_service.is_accessible(payload['sub'], payload['role_ids'], payload['iat'])
                 if not accept:
-                    raise errors.reset_access_policy
+                    raise Error(f'Token rejected because of changing in user and role: {note}', HttpStatusCode.Unauthorized)
                 g.user = payload['user']
                 g.roles = payload['role_ids']
                 g.permissions = payload['permissions']
@@ -100,7 +100,7 @@ class Middleware(object):
                 for p in permissions:
                     if p in g.permissions:
                         return fn(*args, **kwargs)
-                raise Error("permission denied")
+                raise Error("permission denied", HttpStatusCode.Forbidden)
 
             return permit
 
@@ -108,6 +108,8 @@ class Middleware(object):
 
 
 def set_logger(logger: Logger, app: Flask):
+    app.logger.handlers = logger.handlers
+    app.logger.setLevel(logger.level)
     @app.before_request
     def start_timer():
         g.start = time.time()
@@ -116,7 +118,7 @@ def set_logger(logger: Logger, app: Flask):
     def log_request(response):
 
         now = time.time()
-        duration = '[%2.4f ms]' % ((now - g.start) * 1000)
+        duration = '%2.4f ms' % ((now - g.start) * 1000)
 
         ip = request.headers.get('X-Forwarded-For', request.remote_addr)
         host = request.host.split(':', 1)[0]
@@ -140,10 +142,10 @@ def set_logger(logger: Logger, app: Flask):
 
         parts = []
         for name, value, _color in log_params:
-            part = f'{name}=[{value}]'
+            part = f'"{name}":"{value}"'
             parts.append(part)
-        line = " ".join(parts)
+        line = '{' + ",".join(parts) + '}'
 
-        logger.info(line)
+        app.logger.info(line)
 
         return response

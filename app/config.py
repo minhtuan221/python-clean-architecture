@@ -21,7 +21,7 @@ class Config(object):
     DB_SERVER = '0.0.0.0'
     PORT = 5010
     DATABASE_URL = "sqlite:///./test.db"
-    LOG_FOLDER = './logs'
+    LOG_FOLDER = '/home/minhtuan/Documents/python-world/python-clean-architecture/logs'
     PRIVATE_KEY = open(private_key_file).read()
     PUBLIC_KEY = open(public_key_file).read()
 
@@ -29,15 +29,16 @@ class Config(object):
 class ProductionConfig(Config):
     """Uses production database server."""
     DB_SERVER = '0.0.0.0'
-    PORT = json_config[production_key]['PORT']
-    DATABASE_URL = json_config[production_key]['sqlalchemy.url']
+    PORT = json_config['PORT']
+    DATABASE_URL = json_config['sqlalchemy.url']
+    LOG_FOLDER = json_config['log-folder']
 
 
 class DevelopmentConfig(Config):
     DB_SERVER = '0.0.0.0'
     DEBUG = True
-    PORT = json_config[development_key]['PORT']
-    DATABASE_URL = json_config[development_key]['sqlalchemy.url']
+    PORT = json_config['PORT']
+    DATABASE_URL = json_config['sqlalchemy.url']
 
 
 class TestingConfig(Config):
@@ -53,4 +54,4 @@ config = {
     'test': TestingConfig
 }
 
-cli_config = config['develop']
+cli_config = config['production']

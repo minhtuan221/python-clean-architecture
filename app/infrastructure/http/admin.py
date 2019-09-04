@@ -135,18 +135,6 @@ def view_permission_to_role_by_admin(role_id):
     return permissions_list
 
 
-@admin_controller.route('/admin/users/<user_id>/permissions', methods=['GET'])
-@middleware.error_handler
-@middleware.verify_auth_token
-@middleware.require_permissions('admin')
-def view_permission_to_user_by_admin(user_id):
-    permissions = user_role_service.view_permission_to_user(int(user_id))
-    permissions_list = []
-    for p in permissions:
-        permissions_list.append(p.to_json())
-    return permissions_list
-
-
 @admin_controller.route('/admin/roles/permissions', methods=['PUT'])
 @middleware.error_handler
 @middleware.verify_auth_token

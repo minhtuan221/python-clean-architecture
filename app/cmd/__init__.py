@@ -83,10 +83,11 @@ def migrate(ctx, alembic_config_file):
 def runserver(ctx, sql_url: str, port: str):
     click.echo('Server start running')
     mode = ctx.obj['mode']
+    click.echo(f'Running in {mode} mode')
     if mode in config.config:
         config.cli_config = config.config[mode]
     from .http import app
-    app.run(host='0.0.0.0', port=config.cli_config.PORT)
+    app.run(host='0.0.0.0', port=config.cli_config.PORT, debug=config.cli_config.DEBUG)
 
 
 if __name__ == "__main__":

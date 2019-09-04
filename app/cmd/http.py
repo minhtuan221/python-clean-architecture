@@ -1,13 +1,14 @@
 from flask import Flask
+
+from app.cmd.center_store import CenterStore
+from app.config import cli_config
 from app.domain.usecase.user import UserService
 from app.domain.usecase.user_role import UserRoleService
-from app.infrastructure.persistence.user import UserRepository
-from app.infrastructure.persistence.role import RoleRepository
+from app.infrastructure.http.middleware import Middleware, set_logger
 from app.infrastructure.persistence.access_policy import AccessPolicyRepository
 from app.infrastructure.persistence.blacklist_token import BlacklistTokenRepository
-from app.config import cli_config
-from app.cmd.center_store import CenterStore
-from app.infrastructure.http.middleware import Middleware, set_logger
+from app.infrastructure.persistence.role import RoleRepository
+from app.infrastructure.persistence.user import UserRepository
 
 # print('cli_config.__dict__', cli_config.__dict__)
 
@@ -24,7 +25,7 @@ user_service = UserService(
     user_repository, access_policy_repository, blacklist_token_repository, cli_config.PUBLIC_KEY,
     secret_key=cli_config.PRIVATE_KEY)
 
-middleware = Middleware(user_service, center_store.logger)
+middleware = Middleware(user_service, center_store.error_logger)
 
 
 def create_first_time_config(admin_email, admin_password):
@@ -35,14 +36,15 @@ def create_first_time_config(admin_email, admin_password):
     admin_role = user_role_service.role_repo.find_by_name('admin')
     if not admin_role:
         admin_role = user_role_service.create_new_role('admin', 'Admin role with super power')
+
     try:
         user_role_service.append_permission_to_role(admin_role.id, 'admin')
     except Exception as e:
-        print('permission admin already exist', e)
+        print('append_permission_to_role got error:', e)
     try:
         user_role_service.append_role_to_user(admin.id, admin_role.id)
     except Exception as e:
-        raise e
+        print('append_role_to_user got error:', e)
 
 
 def create_app(config_object):
@@ -55,9 +57,13 @@ def create_app(config_object):
     flask_app.register_blueprint(user_controller)
     flask_app.register_blueprint(admin_controller)
 
-    set_logger(center_store.logger, flask_app)
+    set_logger(center_store.access_logger, flask_app)
 
     return flask_app
 
+
+# from gunicorn import glogging
+# glogging.Logger.access_log = center_store.logger
+# glogging.Logger.error_log = center_store.logger
 
 app = create_app(cli_config)
