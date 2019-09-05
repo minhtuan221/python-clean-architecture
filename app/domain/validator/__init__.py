@@ -1,6 +1,11 @@
+import random
 import re
-from app.pkgs.type_check import type_check
+import string
+
 from app.pkgs import errors
+from app.pkgs.type_check import type_check
+
+special_symbol = ['$', '@', '#', '%']
 
 
 @type_check
@@ -43,8 +48,6 @@ def validate_email(email: str):
 
 @type_check
 def validate_password(passwd: str):
-    special_symbol = ['$', '@', '#', '%']
-
     if len(passwd) < 6:
         return errors.Error('length should be at least 6')
 
@@ -64,3 +67,16 @@ def validate_password(passwd: str):
         return errors.Error(f'Password should have at least one of the symbols {special_symbol}')
 
     return None
+
+
+def gen_reset_password():
+    """
+    generate a 8 character password
+    :return: string - password
+    """
+    uppercase = ''.join(random.choice(string.ascii_uppercase) for i in range(3))
+    lowercase = ''.join(random.choice(string.ascii_lowercase) for i in range(3))
+    digit = random.choice(string.digits)
+    symbol = random.choice(special_symbol)
+    password = lowercase + digit + symbol + uppercase
+    return password

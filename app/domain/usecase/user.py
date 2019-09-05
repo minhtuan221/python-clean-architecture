@@ -4,24 +4,27 @@ from typing import List, Set
 import jwt
 
 from app.domain import validator
-from app.pkgs import errors
 from app.domain.model.user import User
-from app.infrastructure.persistence.user import UserRepository
+from app.domain.usecase.email import EmailService
 from app.infrastructure.persistence.access_policy import AccessPolicyRepository
 from app.infrastructure.persistence.blacklist_token import BlacklistTokenRepository
-from app.pkgs.type_check import type_check
+from app.infrastructure.persistence.user import UserRepository
+from app.pkgs import errors
 from app.pkgs.time import time_to_int
+from app.pkgs.type_check import type_check
 
 
 class UserService(object):
 
     def __init__(self, user_repo: UserRepository, access_blacklist: AccessPolicyRepository,
-                 blacklist_token_repo: BlacklistTokenRepository, public_key: str, secret_key=''):
+                 blacklist_token_repo: BlacklistTokenRepository, public_key: str, secret_key='',
+                 email_service: EmailService = None):
         self.user_repo: UserRepository = user_repo
         self.access_policy_repo = access_blacklist
         self.blacklist_token_repo = blacklist_token_repo
         self.secret_key = secret_key
         self.public_key = public_key
+        self.email_service = email_service
 
     def validate_user_email_password(self, email: str, password: str):
         validator.validate_email(email)
@@ -39,13 +42,57 @@ class UserService(object):
         user.is_confirmed = True
         return self.user_repo.create(user)
 
-    def sign_up_new_user(self, email: str, password: str):
+    def sign_up_new_user(self, email: str, password: str, confirm_url: str):
         self.validate_user_email_password(email, password)
         user: User = User(email=email, password=password)
         user.hash_password(password)
         # set is_confirm to False
         user.is_confirmed = False
-        return self.user_repo.create(user)
+        u = self.user_repo.create(user)
+        self.email_service.send_confirm_email(user.email, confirm_url, template='user/activate.html')
+        return u
+
+    def confirm_user_email(self, token):
+        email = None
+        try:
+            email = self.email_service.confirm_email(token)
+        except Exception as e:
+            errors.Error(str(e))
+        if email:
+            user = self.user_repo.find_by_email(email)
+            if not user:
+                raise errors.record_not_found
+            if user.is_confirmed:
+                raise errors.Error('Account already confirmed. Please login.', errors.HttpStatusCode.Bad_Request)
+            else:
+                user.is_confirmed = True
+                user = self.user_repo.update(user)
+                self.access_policy_repo.change_user(user, note=f'update user is_confirmed = {user.is_confirmed}')
+                return True
+        return False
+
+    def request_reset_user_password(self, email: str, confirm_url: str):
+        user = self.user_repo.find_by_email(email)
+        self.email_service.send_confirm_email(user.email, confirm_url, template='user/reset_password.html')
+        return user
+
+    def confirm_reset_user_password(self, token):
+        email = None
+        try:
+            email = self.email_service.confirm_email(token)
+        except Exception as e:
+            errors.Error(str(e))
+        if email:
+            user = self.user_repo.find_by_email(email)
+            if not user:
+                raise errors.record_not_found
+            new_password = validator.gen_reset_password()
+            user.hash_password(new_password)
+            user = self.user_repo.update(user)
+            self.access_policy_repo.change_user(user, note=f'update user password')
+            self.email_service.send_reset_password(user.email, new_password)
+            return True
+        return False
 
     def login(self, email: str, password: str):
         validator.validate_email(email)
@@ -167,6 +214,9 @@ class UserService(object):
         try:
             payload: dict = jwt.decode(
                 auth_token, self.public_key, algorithms=['RS256'])
+            is_confirmed = payload['user']['is_confirmed']
+            if not is_confirmed:
+                raise errors.Error('User is not confirmed', errors.HttpStatusCode.Unauthorized)
             is_blacklisted_token = self.blacklist_token_repo.is_blacklist(auth_token)
             if is_blacklisted_token:
                 raise errors.token_blacklisted
