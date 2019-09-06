@@ -31,6 +31,8 @@ def set_gunicorn_custom_logger(path='./logs', is_absolute_path=False,
 
     error_logger = logging.getLogger("gunicorn.error")
     access_logger = logging.getLogger("gunicorn.access")
+    # error_logger = logging.getLogger("rotation log")
+    # access_logger = logging.getLogger("rotation log access")
     formatter = logging.Formatter(log_format)
 
     access_handler = TimedRotatingFileHandler(log_path + '/access.log', when="d", interval=1, backupCount=5)

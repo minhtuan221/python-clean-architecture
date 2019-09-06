@@ -27,6 +27,8 @@ class Config(object):
     LOG_FOLDER = '/home/minhtuan/Documents/python-world/python-clean-architecture/logs'
     PRIVATE_KEY = open(private_key_file).read()
     PUBLIC_KEY = open(public_key_file).read()
+    REQUEST_MAX_SIZE = 1000000  # 1mb
+    REQUEST_TIMEOUT = 15  # 15s
 
     # mail settings
     MAIL_SERVER = 'smtp.googlemail.com'

@@ -1,17 +1,18 @@
-from flask import Blueprint, request
+from sanic.blueprints import Blueprint
+from sanic.request import Request
 
-from app.cmd.http import user_service, middleware, user_role_service
+from app.cmd.http import user_service, sanic_adapter_middleware as middleware, user_role_service
 from app.domain.model.user import User
 
-admin_controller = Blueprint('admin_controller', __name__)
+admin_controller = Blueprint(__name__)
 
 
 @admin_controller.route('/admin/users', methods=['POST'])
 @middleware.error_handler
 @middleware.verify_auth_token
 @middleware.require_permissions('admin')
-def create_new_user_by_admin():
-    content: dict = request.get_json(silent=True)
+def create_new_user_by_admin(request: Request):
+    content: dict = request.json
     email = content.get('email', '')
     password = content.get('password', '')
     user = user_service.create_new_user(email, password)
@@ -22,7 +23,7 @@ def create_new_user_by_admin():
 @middleware.error_handler
 @middleware.verify_auth_token
 @middleware.require_permissions('admin')
-def find_all():
+def find_all(request: Request):
     search_word = request.args.get('email', '')
     users = user_service.search(search_word)
     res = []
@@ -35,7 +36,7 @@ def find_all():
 @middleware.error_handler
 @middleware.verify_auth_token
 @middleware.require_permissions('admin')
-def find_one(id):
+def find_one(request: Request, id):
     user: User = user_service.find_by_id(int(id))
     if user:
         return user.to_json()
@@ -46,7 +47,7 @@ def find_one(id):
 @middleware.error_handler
 @middleware.verify_auth_token
 @middleware.require_permissions('admin')
-def find_one_with_all_profile(id: int):
+def find_one_with_all_profile(request: Request, id: int):
     user, permissions = user_service.find_all_user_info_by_id(int(id))
     if user:
         user_dict = user.to_json()
@@ -59,8 +60,8 @@ def find_one_with_all_profile(id: int):
 @middleware.error_handler
 @middleware.verify_auth_token
 @middleware.require_permissions('admin')
-def update_is_confirmed(id):
-    content: dict = request.get_json(silent=True)
+def update_is_confirmed(request: Request, id):
+    content: dict = request.json
     is_confirmed = content.get('is_confirmed', False)
     user = user_service.update_is_confirmed(int(id), is_confirmed)
     return user.to_json()
@@ -70,8 +71,8 @@ def update_is_confirmed(id):
 @middleware.error_handler
 @middleware.verify_auth_token
 @middleware.require_permissions('admin')
-def create_new_role():
-    content: dict = request.get_json(silent=True)
+def create_new_role(request: Request):
+    content: dict = request.json
     name = content.get('name', '')
     description = content.get('description', '')
     role = user_role_service.create_new_role(name, description)
@@ -82,8 +83,8 @@ def create_new_role():
 @middleware.error_handler
 @middleware.verify_auth_token
 @middleware.require_permissions('admin')
-def append_role_to_user_by_admin():
-    content: dict = request.get_json(silent=True)
+def append_role_to_user_by_admin(request: Request):
+    content: dict = request.json
     user_id = content.get('user_id', 0)
     role_id = content.get('role_id', 0)
     user = user_role_service.append_role_to_user(user_id, role_id)
@@ -94,8 +95,8 @@ def append_role_to_user_by_admin():
 @middleware.error_handler
 @middleware.verify_auth_token
 @middleware.require_permissions('admin')
-def remove_role_to_user_by_admin():
-    content: dict = request.get_json(silent=True)
+def remove_role_to_user_by_admin(request: Request):
+    content: dict = request.json
     user_id = content.get('user_id', 0)
     role_id = content.get('role_id', 0)
     u = user_role_service.remove_role_to_user(user_id, role_id)
@@ -107,8 +108,8 @@ def remove_role_to_user_by_admin():
 @middleware.error_handler
 @middleware.verify_auth_token
 @middleware.require_permissions('admin')
-def append_permission_to_role_by_admin():
-    content: dict = request.get_json(silent=True)
+def append_permission_to_role_by_admin(request: Request):
+    content: dict = request.json
     role_id = content.get('role_id', 0)
     permission = content.get('permission', '')
     r = user_role_service.append_permission_to_role(role_id, permission)
@@ -119,7 +120,7 @@ def append_permission_to_role_by_admin():
 @middleware.error_handler
 @middleware.verify_auth_token
 @middleware.require_permissions('admin')
-def view_all_available_permission_by_admin():
+def view_all_available_permission_by_admin(request: Request):
     return {'permission': list(middleware.permissions_list)}
 
 
@@ -127,7 +128,7 @@ def view_all_available_permission_by_admin():
 @middleware.error_handler
 @middleware.verify_auth_token
 @middleware.require_permissions('admin')
-def view_permission_to_role_by_admin(role_id):
+def view_permission_to_role_by_admin(request: Request, role_id):
     permissions = user_role_service.view_permission_to_role(int(role_id))
     permissions_list = []
     for p in permissions:
@@ -139,8 +140,8 @@ def view_permission_to_role_by_admin(role_id):
 @middleware.error_handler
 @middleware.verify_auth_token
 @middleware.require_permissions('admin')
-def remove_permission_to_role_by_admin():
-    content: dict = request.get_json(silent=True)
+def remove_permission_to_role_by_admin(request: Request):
+    content: dict = request.json
     user_id = content.get('user_id', 0)
     role_id = content.get('role_id', 0)
     r = user_role_service.remove_permission_to_role(user_id, role_id)

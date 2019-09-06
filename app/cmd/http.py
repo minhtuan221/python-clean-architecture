@@ -1,10 +1,12 @@
 from flask import Flask
+from sanic import Sanic
 
 from app.cmd.center_store import CenterStore
 from app.config import cli_config
 from app.domain.usecase.user import UserService
 from app.domain.usecase.user_role import UserRoleService
-from app.infrastructure.http.middleware import Middleware, set_logger
+from app.infrastructure.http.flask_adapter.middleware import Middleware, set_logger
+from app.infrastructure.http.sanic_adapter import middleware as sanic_utils
 from app.infrastructure.persistence.access_policy import AccessPolicyRepository
 from app.infrastructure.persistence.blacklist_token import BlacklistTokenRepository
 from app.infrastructure.persistence.role import RoleRepository
@@ -26,6 +28,7 @@ user_service = UserService(
     secret_key=cli_config.PRIVATE_KEY)
 
 middleware = Middleware(user_service, center_store.error_logger)
+sanic_adapter_middleware = sanic_utils.Middleware(user_service, center_store.error_logger)
 
 
 def create_first_time_config(admin_email, admin_password):
@@ -47,12 +50,12 @@ def create_first_time_config(admin_email, admin_password):
         print('append_role_to_user got error:', e)
 
 
-def create_app(config_object):
+def create_flask_app(config_object):
     flask_app: Flask = Flask(__name__)
     flask_app.config.from_object(config_object)
 
-    from app.infrastructure.http.user import user_controller
-    from app.infrastructure.http.admin import admin_controller
+    from app.infrastructure.http.flask_adapter.user import user_controller
+    from app.infrastructure.http.flask_adapter.admin import admin_controller
 
     flask_app.register_blueprint(user_controller)
     flask_app.register_blueprint(admin_controller)
@@ -62,8 +65,21 @@ def create_app(config_object):
     return flask_app
 
 
-# from gunicorn import glogging
-# glogging.Logger.access_log = center_store.logger
-# glogging.Logger.error_log = center_store.logger
+def create_sanic_app(config_object):
+    sanic_app: Sanic = Sanic(__name__)
+    sanic_app.config.from_object(config_object)
 
-app = create_app(cli_config)
+    from app.infrastructure.http.sanic_adapter.user import user_controller
+    from app.infrastructure.http.sanic_adapter.admin import admin_controller
+
+    sanic_app.blueprint(user_controller)
+    sanic_app.blueprint(admin_controller)
+
+    sanic_utils.set_logger(center_store.access_logger, sanic_app)
+    sanic_app.debug = False
+    sanic_app.config.ACCESS_LOG = None
+
+    return sanic_app
+
+
+app = create_sanic_app(cli_config)

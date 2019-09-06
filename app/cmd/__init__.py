@@ -87,7 +87,7 @@ def runserver(ctx, sql_url: str, port: str):
     if mode in config.config:
         config.cli_config = config.config[mode]
     from .http import app
-    app.run(host='0.0.0.0', port=config.cli_config.PORT, debug=config.cli_config.DEBUG)
+    app.run(host='0.0.0.0', port=config.cli_config.PORT, debug=config.cli_config.DEBUG, access_log=None)
 
 
 if __name__ == "__main__":

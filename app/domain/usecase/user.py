@@ -5,7 +5,7 @@ import jwt
 
 from app.domain import validator
 from app.domain.model.user import User
-from app.domain.usecase.email import EmailService
+# from app.domain.usecase.email import EmailService
 from app.infrastructure.persistence.access_policy import AccessPolicyRepository
 from app.infrastructure.persistence.blacklist_token import BlacklistTokenRepository
 from app.infrastructure.persistence.user import UserRepository
@@ -18,7 +18,7 @@ class UserService(object):
 
     def __init__(self, user_repo: UserRepository, access_blacklist: AccessPolicyRepository,
                  blacklist_token_repo: BlacklistTokenRepository, public_key: str, secret_key='',
-                 email_service: EmailService = None):
+                 email_service=None):
         self.user_repo: UserRepository = user_repo
         self.access_policy_repo = access_blacklist
         self.blacklist_token_repo = blacklist_token_repo
@@ -49,7 +49,8 @@ class UserService(object):
         # set is_confirm to False
         user.is_confirmed = False
         u = self.user_repo.create(user)
-        self.email_service.send_confirm_email(user.email, confirm_url, template='user/activate.html')
+        if self.email_service:
+            self.email_service.send_confirm_email(user.email, confirm_url, template='user/activate.html')
         return u
 
     def confirm_user_email(self, token):
@@ -73,7 +74,10 @@ class UserService(object):
 
     def request_reset_user_password(self, email: str, confirm_url: str):
         user = self.user_repo.find_by_email(email)
-        self.email_service.send_confirm_email(user.email, confirm_url, template='user/reset_password.html')
+        if not user:
+            raise errors.record_not_found
+        if self.email_service:
+            self.email_service.send_confirm_email(user.email, confirm_url, template='user/reset_password.html')
         return user
 
     def confirm_reset_user_password(self, token):
