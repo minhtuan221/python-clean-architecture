@@ -1,5 +1,4 @@
 from functools import wraps
-from logging import Logger
 
 
 class HttpStatusCode(object):
@@ -17,7 +16,7 @@ class HttpStatusCode(object):
 class Error(Exception):
     """Base class for exceptions in this module."""
 
-    def __init__(self, message, error_code=HttpStatusCode.OK, data=None):
+    def __init__(self, message: str = 'there is no error here', error_code=HttpStatusCode.OK, data=None):
         self.message: str = message
         self.error_code: int = error_code
         self.data = data
@@ -54,6 +53,7 @@ def error_handler(func):
         except Exception as e:
             return Error(f'Unknown error: {str(e)}')
         return res
+
     return wrapper
 
 

@@ -1,7 +1,9 @@
 import click
-from app.domain.model import init_database
+
 from app import config
 from app.cmd.http import create_first_time_config
+from app.domain.model import init_database
+
 
 @click.group()
 @click.option('-m', '--mode',
@@ -87,7 +89,7 @@ def runserver(ctx, sql_url: str, port: str):
     if mode in config.config:
         config.cli_config = config.config[mode]
     from .http import app
-    app.run(host='0.0.0.0', port=config.cli_config.PORT, debug=config.cli_config.DEBUG, access_log=None)
+    app.run(host='0.0.0.0', port=config.cli_config.PORT, debug=True)
 
 
 if __name__ == "__main__":

@@ -174,14 +174,15 @@ class UserService(object):
         self.access_policy_repo.change_user(user, note=f'update user is_confirmed = {user.is_confirmed}')
         return user
 
-    def is_accessible(self, user_id: int, role_ids: List[int], token_iat_int: int):
+    def validate_access_policy(self, user_id: int, role_ids: List[int], token_iat_int: int):
         checker = self.access_policy_repo.find_for_token_validation(user_id, role_ids)
         # print(checker.to_json(), time_to_int(checker.denied_before), token_iat_int)
         if checker is None:
-            return True, 'ok'
+            return True
         if time_to_int(checker.denied_before) > token_iat_int:
-            return False, checker.note
-        return True, 'ok'
+            raise errors.Error(f'Token rejected because of changing in user and role: {checker.note}',
+                               errors.HttpStatusCode.Unauthorized)
+        return True
 
     def delete(self, user_id: int):
         validator.validate_id(user_id)

@@ -1,113 +1,35 @@
-"""
-    flaskext.mail
-    ~~~~~~~~~~~~~
+import smtplib
+import ssl
+from email.message import Message
+from typing import List
 
-    Flask extension for sending email.
 
-    :copyright: (c) 2010 by Dan Jacob.
-    :license: BSD, see LICENSE for more details.
-"""
-from contextlib import contextmanager
-
-from .connection import Connection
-from .message import Message, Attachment, BadHeaderError
-from .signals import email_dispatched
+def create_message(sender_email: str, receiver_email: str, subject: str, html_body):
+    message = Message()
+    message["Subject"] = subject
+    message["From"] = sender_email
+    message["To"] = receiver_email
+    message.add_header('Content-Type', 'text/html')
+    message.set_payload(html_body)
+    return message
 
 
 class Mail(object):
-    """
-    Manages email messaging
 
-    :param app: Flask instance
-    """
+    def __init__(self, sender_email: str, sender_password: str, port=456, smtp_server="smtp.gmail.com"):
+        self.sender_email = sender_email
+        self.password = sender_password
+        self.port = port  # For SSL
+        self.smtp_server = smtp_server
 
-    def __init__(self, mail_username, mail_password, app=None, mail_server='127.0.0.1', mail_port=25,
-                 mail_use_TLS=False, mail_use_SSL=False, mail_debug=False, default_max_emails=None,
-                 mail_suppress_end=False, mail_fail_silently=True):
-        """
-        Initializes your mail settings from the application
-        settings.
+    def send(self, message: Message):
+        # Create secure connection with server and send email
+        sender_email = message["From"]
+        receiver_email = message["To"]
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL(self.smtp_server, self.port, context=context) as server:
+            server.login(self.sender_email, self.password)
+            server.sendmail(sender_email, receiver_email, message.as_string())
 
-        You can use this if you want to set up your Mail instance
-        at configuration time.
-
-        :param app: Flask application instance
-        """
-
-        self.server = mail_server
-        self.username = mail_username
-        self.password = mail_password
-        self.port = mail_port
-        self.use_tls = mail_use_TLS
-        self.use_ssl = mail_use_SSL
-        self.debug = int(mail_debug)
-        self.max_emails = default_max_emails
-        self.suppress = mail_suppress_end
-        self.fail_silently = mail_fail_silently
-
-        self.suppress = self.suppress or app.testing
-        self.app = app
-
-    @contextmanager
-    def record_messages(self):
-        """
-        Records all messages. Use in unit tests for example::
-
-            with mail.record_messages() as outbox:
-                response = app.test_client.get("/email-sending-view/")
-                assert len(outbox) == 1
-                assert outbox[0].subject == "testing"
-
-        You must have blinker installed in order to use this feature.
-        :versionadded: 0.4
-        """
-
-        if not email_dispatched:
-            raise RuntimeError("blinker must be installed")
-
-        outbox = []
-
-        def _record(message, app):
-            outbox.append(message)
-
-        email_dispatched.connect(_record)
-
-        try:
-            yield outbox
-        finally:
-            email_dispatched.disconnect(_record)
-
-    def send(self, message):
-        """
-        Sends a single message instance. If TESTING is True
-        the message will not actually be sent.
-
-        :param message: a Message instance.
-        """
-
-        with self.connect() as connection:
-            message.send(connection)
-
-    def send_message(self, *args, **kwargs):
-        """
-        Shortcut for send(msg).
-
-        Takes same arguments as Message constructor.
-
-        :versionadded: 0.3.5
-        """
-
-        self.send(Message(*args, **kwargs))
-
-    def connect(self, max_emails=None):
-        """
-        Opens a connection to the mail host.
-
-        :param max_emails: the maximum number of emails that can
-                           be sent in a single connection. If this
-                           number is exceeded the Connection instance
-                           will reconnect to the mail server. The
-                           DEFAULT_MAX_EMAILS config setting is used
-                           if this is None.
-        """
-        return Connection(self, max_emails)
+    def create_message(self, receiver_email: str, subject: str, html_body):
+        return create_message(self.sender_email, receiver_email, subject, html_body)

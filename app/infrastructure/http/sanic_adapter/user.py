@@ -58,14 +58,14 @@ def login(request: Request):
 
 @user_controller.route('/users/profile', methods=['GET'])
 @middleware.error_handler
-@middleware.verify_auth_token
+@middleware.require_permissions()
 def get_user_profile(request: Request):
     return {'user': request.headers['user'], 'roles': request.headers['roles'], 'permission': request.headers['permissions']}
 
 
 @user_controller.route('/users/<id>/password', methods=['PUT'])
 @middleware.error_handler
-@middleware.verify_auth_token
+@middleware.require_permissions()
 def update_password(request: Request, id):
     content: dict = request.json
     old_password = content.get('old_password', '')
@@ -77,7 +77,7 @@ def update_password(request: Request, id):
 
 @user_controller.route('/logout', methods=['GET'])
 @middleware.error_handler
-@middleware.verify_auth_token
+@middleware.require_permissions()
 def logout(request: Request):
     r = user_service.logout(request.headers['auth_token'])
     return {'message': r}

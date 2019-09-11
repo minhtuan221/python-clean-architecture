@@ -7,6 +7,7 @@ from app.domain.usecase.user import UserService
 from app.domain.usecase.user_role import UserRoleService
 from app.infrastructure.http.flask_adapter.middleware import Middleware, set_logger
 from app.infrastructure.http.sanic_adapter import middleware as sanic_utils
+from app.infrastructure.http.sanic_adapter.compress import Compress
 from app.infrastructure.persistence.access_policy import AccessPolicyRepository
 from app.infrastructure.persistence.blacklist_token import BlacklistTokenRepository
 from app.infrastructure.persistence.role import RoleRepository
@@ -68,6 +69,7 @@ def create_flask_app(config_object):
 def create_sanic_app(config_object):
     sanic_app: Sanic = Sanic(__name__)
     sanic_app.config.from_object(config_object)
+    Compress(sanic_app)
 
     from app.infrastructure.http.sanic_adapter.user import user_controller
     from app.infrastructure.http.sanic_adapter.admin import admin_controller
@@ -75,9 +77,10 @@ def create_sanic_app(config_object):
     sanic_app.blueprint(user_controller)
     sanic_app.blueprint(admin_controller)
 
-    sanic_utils.set_logger(center_store.access_logger, sanic_app)
-    sanic_app.debug = False
-    sanic_app.config.ACCESS_LOG = None
+    if not config_object.DEBUG:
+        sanic_utils.set_logger(center_store.access_logger, sanic_app)
+        sanic_app.debug = False
+        sanic_app.config.ACCESS_LOG = None
 
     return sanic_app
 

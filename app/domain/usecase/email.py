@@ -1,4 +1,4 @@
-from app.infrastructure.smtp import Mail, Message
+from app.infrastructure.smtp import Mail, create_message
 from app.pkgs.token import TokenFactory
 from flask import render_template
 
@@ -12,13 +12,8 @@ class EmailService(object):
         self.mail_sender = default_mail_sender
         self.token_factory = token
 
-    def send_email(self, to:str, subject: str, template, sender=None):
-        msg = Message(
-            subject,
-            recipients=[to],
-            html=template,
-            sender=sender or self.mail_sender
-        )
+    def send_email(self, to: str, subject: str, template, sender=None):
+        msg = create_message(sender_email=sender or self.mail_sender, receiver_email=to, subject=subject, html_body=template)
         self.mail.send(msg)
 
     def send_confirm_email(self, email: str, confirm_url: str, template):

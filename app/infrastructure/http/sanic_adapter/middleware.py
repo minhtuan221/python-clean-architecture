@@ -31,7 +31,7 @@ class Middleware(object):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             try:
-                res = await func(*args, **kwargs)
+                res = func(*args, **kwargs)
             except Error as e:
                 return json(e.to_json(), status=e.code())
             except Exception as e:
@@ -67,26 +67,26 @@ class Middleware(object):
     def verify_auth_token(self, f):
         @wraps(f)
         async def decorated(request: Request, *args, **kwargs):
-
-            # Flask normally handles OPTIONS requests on its own, but in the
-            # case it is configured to forward those to the application, we
-            # need to ignore authentication headers and let the request through
-            # to avoid unwanted interactions with CORS.
-            if request.method != 'OPTIONS':  # pragma: no cover
-                token = self.get_bearer_token(request)
-                payload = self.user_service.validate_auth_token(token)
-                # print(payload)
-                accept, note = self.user_service.is_accessible(payload['sub'], payload['role_ids'], payload['iat'])
-                if not accept:
-                    raise Error(f'Token rejected because of changing in user and role: {note}',
-                                HttpStatusCode.Unauthorized)
-                request.headers['user'] = payload['user']
-                request.headers['roles'] = payload['role_ids']
-                request.headers['permissions'] = payload['permissions']
-                request.headers['auth_token'] = token
+            self._verify_auth_token(request)
             return f(request, *args, **kwargs)
 
         return decorated
+
+    def _verify_auth_token(self, request: Request):
+        # Flask normally handles OPTIONS requests on its own, but in the
+        # case it is configured to forward those to the application, we
+        # need to ignore authentication headers and let the request through
+        # to avoid unwanted interactions with CORS.
+        if request.method != 'OPTIONS':  # pragma: no cover
+            token = self.get_bearer_token(request)
+            payload = self.user_service.validate_auth_token(token)
+            # print(payload)
+            self.user_service.validate_access_policy(payload['sub'], payload['role_ids'], payload['iat'])
+            request.headers['user'] = payload['user']
+            request.headers['roles'] = payload['role_ids']
+            request.headers['permissions'] = payload['permissions']
+            request.headers['auth_token'] = token
+        return request
 
     def require_permissions(self, *permissions):
         """
@@ -99,10 +99,13 @@ class Middleware(object):
         def check_permission(fn):
             @wraps(fn)
             def permit(request: Request, *args, **kwargs):
-                for p in permissions:
-                    if p in request.headers['permissions']:
-                        return fn(request, *args, **kwargs)
-                raise Error("permission denied", HttpStatusCode.Forbidden)
+                self._verify_auth_token(request)
+                if len(permissions) > 0:
+                    for p in permissions:
+                        if p in request.headers['permissions']:
+                            return fn(request, *args, **kwargs)
+                    raise Error("permission denied", HttpStatusCode.Forbidden)
+                return fn(request, *args, **kwargs)
 
             return permit
 

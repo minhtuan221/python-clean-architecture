@@ -9,7 +9,6 @@ admin_controller = Blueprint(__name__)
 
 @admin_controller.route('/admin/users', methods=['POST'])
 @middleware.error_handler
-@middleware.verify_auth_token
 @middleware.require_permissions('admin')
 def create_new_user_by_admin(request: Request):
     content: dict = request.json
@@ -21,7 +20,6 @@ def create_new_user_by_admin(request: Request):
 
 @admin_controller.route('/admin/users', methods=['GET'])
 @middleware.error_handler
-@middleware.verify_auth_token
 @middleware.require_permissions('admin')
 def find_all(request: Request):
     search_word = request.args.get('email', '')
@@ -34,7 +32,6 @@ def find_all(request: Request):
 
 @admin_controller.route('/admin/users/<id>')
 @middleware.error_handler
-@middleware.verify_auth_token
 @middleware.require_permissions('admin')
 def find_one(request: Request, id):
     user: User = user_service.find_by_id(int(id))
@@ -45,7 +42,6 @@ def find_one(request: Request, id):
 
 @admin_controller.route('/admin/users/<id>/profile')
 @middleware.error_handler
-@middleware.verify_auth_token
 @middleware.require_permissions('admin')
 def find_one_with_all_profile(request: Request, id: int):
     user, permissions = user_service.find_all_user_info_by_id(int(id))
@@ -58,7 +54,6 @@ def find_one_with_all_profile(request: Request, id: int):
 
 @admin_controller.route('/admin/users/<id>/confirm', methods=['PUT'])
 @middleware.error_handler
-@middleware.verify_auth_token
 @middleware.require_permissions('admin')
 def update_is_confirmed(request: Request, id):
     content: dict = request.json
@@ -69,7 +64,6 @@ def update_is_confirmed(request: Request, id):
 # admin role-permission base access control
 @admin_controller.route('/admin/roles', methods=['POST'])
 @middleware.error_handler
-@middleware.verify_auth_token
 @middleware.require_permissions('admin')
 def create_new_role(request: Request):
     content: dict = request.json
@@ -81,7 +75,6 @@ def create_new_role(request: Request):
 
 @admin_controller.route('/admin/users/roles', methods=['POST'])
 @middleware.error_handler
-@middleware.verify_auth_token
 @middleware.require_permissions('admin')
 def append_role_to_user_by_admin(request: Request):
     content: dict = request.json
@@ -93,7 +86,6 @@ def append_role_to_user_by_admin(request: Request):
 
 @admin_controller.route('/admin/users/roles', methods=['PUT'])
 @middleware.error_handler
-@middleware.verify_auth_token
 @middleware.require_permissions('admin')
 def remove_role_to_user_by_admin(request: Request):
     content: dict = request.json
@@ -106,7 +98,6 @@ def remove_role_to_user_by_admin(request: Request):
 # permission append, remove...
 @admin_controller.route('/admin/roles/permissions', methods=['POST'])
 @middleware.error_handler
-@middleware.verify_auth_token
 @middleware.require_permissions('admin')
 def append_permission_to_role_by_admin(request: Request):
     content: dict = request.json
@@ -118,7 +109,6 @@ def append_permission_to_role_by_admin(request: Request):
 
 @admin_controller.route('/admin/permissions')
 @middleware.error_handler
-@middleware.verify_auth_token
 @middleware.require_permissions('admin')
 def view_all_available_permission_by_admin(request: Request):
     return {'permission': list(middleware.permissions_list)}
@@ -126,7 +116,6 @@ def view_all_available_permission_by_admin(request: Request):
 
 @admin_controller.route('/admin/roles/<role_id>/permissions', methods=['GET'])
 @middleware.error_handler
-@middleware.verify_auth_token
 @middleware.require_permissions('admin')
 def view_permission_to_role_by_admin(request: Request, role_id):
     permissions = user_role_service.view_permission_to_role(int(role_id))
@@ -138,7 +127,6 @@ def view_permission_to_role_by_admin(request: Request, role_id):
 
 @admin_controller.route('/admin/roles/permissions', methods=['PUT'])
 @middleware.error_handler
-@middleware.verify_auth_token
 @middleware.require_permissions('admin')
 def remove_permission_to_role_by_admin(request: Request):
     content: dict = request.json

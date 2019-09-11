@@ -75,7 +75,7 @@ class Middleware(object):
                 token = self.get_bearer_token()
                 payload = self.user_service.validate_auth_token(token)
                 # print(payload)
-                accept, note = self.user_service.is_accessible(payload['sub'], payload['role_ids'], payload['iat'])
+                accept, note = self.user_service.validate_access_policy(payload['sub'], payload['role_ids'], payload['iat'])
                 if not accept:
                     raise Error(f'Token rejected because of changing in user and role: {note}', HttpStatusCode.Unauthorized)
                 g.user = payload['user']
