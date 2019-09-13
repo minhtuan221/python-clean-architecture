@@ -5,11 +5,12 @@ import jwt
 
 from app.domain import validator
 from app.domain.model.user import User
-# from app.domain.usecase.email import EmailService
+from app.domain.usecase.email import EmailService
 from app.infrastructure.persistence.access_policy import AccessPolicyRepository
 from app.infrastructure.persistence.blacklist_token import BlacklistTokenRepository
 from app.infrastructure.persistence.user import UserRepository
 from app.pkgs import errors
+from app.pkgs.query import get_start_stop_pos
 from app.pkgs.time import time_to_int
 from app.pkgs.type_check import type_check
 
@@ -18,7 +19,7 @@ class UserService(object):
 
     def __init__(self, user_repo: UserRepository, access_blacklist: AccessPolicyRepository,
                  blacklist_token_repo: BlacklistTokenRepository, public_key: str, secret_key='',
-                 email_service=None):
+                 email_service: EmailService = None):
         self.user_repo: UserRepository = user_repo
         self.access_policy_repo = access_blacklist
         self.blacklist_token_repo = blacklist_token_repo
@@ -120,7 +121,7 @@ class UserService(object):
                 }
                 token = self.encode_auth_token(user, other_payload_info=other_info)
                 # create and return token here
-                return {'token': token.decode("utf-8")}
+                return token.decode("utf-8")
             else:
                 raise errors.password_verifying_failed
         raise errors.email_cannot_be_found
@@ -144,8 +145,9 @@ class UserService(object):
             return user, permissions
         raise errors.record_not_found
 
-    def search(self, email: str) -> List[dict]:
-        users = self.user_repo.search(email)
+    def search(self, email: str, page=1, page_size=10) -> List[dict]:
+        o, l = get_start_stop_pos(page, page_size)
+        users = self.user_repo.search_with_roles(email, offset=o, limit=l)
         return users
 
     @type_check

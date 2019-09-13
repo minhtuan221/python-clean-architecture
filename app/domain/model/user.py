@@ -38,7 +38,7 @@ class User(Base):
             'is_confirmed': self.is_confirmed,
             'roles': roles,
             'created_at': self.created_at,
-            'update_at': self.updated_at,
+            'updated_at': self.updated_at,
             'deleted_at': self.deleted_at
         }
 

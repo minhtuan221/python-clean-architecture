@@ -1,5 +1,6 @@
 from flask import Flask
 from sanic import Sanic
+from sanic_cors import CORS
 
 from app.cmd.center_store import CenterStore
 from app.config import cli_config
@@ -70,6 +71,7 @@ def create_sanic_app(config_object):
     sanic_app: Sanic = Sanic(__name__)
     sanic_app.config.from_object(config_object)
     Compress(sanic_app)
+    CORS(sanic_app, automatic_options=True)
 
     from app.infrastructure.http.sanic_adapter.user import user_controller
     from app.infrastructure.http.sanic_adapter.admin import admin_controller

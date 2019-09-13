@@ -1,10 +1,10 @@
-from app.domain.model import ConnectionPool
-from app.domain.model.user import User, Role
-from app.domain.model import PermissionPolicy
-from app.domain.model.blacklist_token import BlacklistToken
-from app.pkgs import errors
 from datetime import datetime
 from typing import List
+
+from app.domain.model import ConnectionPool
+from app.domain.model import PermissionPolicy
+from app.domain.model.user import User, Role
+from app.pkgs import errors
 
 
 class UserRepository(object):
@@ -53,7 +53,7 @@ class UserRepository(object):
     def find_by_email(self, email: str) -> User:
         with self.db.new_session() as db:
             user: User = db.session.query(User).filter_by(
-                email=email).filter(User.deleted_at == None).first()
+                email=email).filter(User.deleted_at == None).order_by(User.updated_at.desc()).all()
         return user
 
     def count_by_email(self, email: str) -> int:
@@ -62,10 +62,12 @@ class UserRepository(object):
                 email=email).filter(User.deleted_at == None).count()
         return total
 
-    def search(self, email: str) -> List[User]:
+    def search_with_roles(self, email: str, offset: int = 0, limit: int = 10) -> List[User]:
         with self.db.new_session() as db:
             users: List[User] = db.session.query(User).filter(
-                User.email.like(f'%{email}%')).filter(User.deleted_at == None).all()
+                User.email.like(f'%{email}%')).filter(User.deleted_at == None).order_by(User.updated_at.desc()).offset(offset).limit(limit).all()
+            for u in users:
+                u.roles.all()
         return users
 
     def update(self, user: User) -> User:
@@ -97,6 +99,3 @@ class UserRepository(object):
         with self.db.new_session() as db:
             roles = db.session.query(User).get(user.id).roles.all()
         return roles
-
-
-

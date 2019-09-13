@@ -16,7 +16,7 @@ class AccessPolicyRepository(object):
 
     def change_role(self, role: Role, note: str = 'change in role'):
         with self.db.new_session() as db:
-            checker = AccessPolicy(user_id=role.id, note=note)
+            checker = AccessPolicy(role_id=role.id, note=note)
             checker.denied_before = datetime.utcnow()
             db.session.add(checker)
         return checker

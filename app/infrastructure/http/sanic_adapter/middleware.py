@@ -60,7 +60,7 @@ class Middleware(object):
         # if the auth type does not match, we act as if there is no auth
         # this is better than failing directly, as it allows the callback
         # to handle special cases, like supporting multiple auth types
-        if auth_type != 'Bearer':
+        if auth_type.lower() != 'bearer':
             raise errors.authorization_type_wrong
         return token
 
@@ -121,37 +121,39 @@ def set_logger(logger: Logger, app: Sanic):
 
     @app.middleware('response')
     def log_request(request: Request, response: Response):
-        start = request.headers['start']
+        # print(request.headers)
+        if 'start' in request.headers: # CORS preflight message do not touch before request middle ware
+            start = request.headers['start']
 
-        now = time.time()
-        duration = '%2.4f ms' % ((now - start) * 1000)
+            now = time.time()
+            duration = '%2.4f ms' % ((now - start) * 1000)
 
-        ip = request.headers.get('X-Forwarded-For', request.ip)
-        host = request.host.split(':', 1)[0]
-        args = dict(request.args)
-        timestamp = datetime.datetime.utcnow()
+            ip = request.headers.get('X-Forwarded-For', request.ip)
+            host = request.host.split(':', 1)[0]
+            args = dict(request.args)
+            timestamp = datetime.datetime.utcnow()
 
-        log_params = [
-            ('method', request.method, 'blue'),
-            ('path', request.path, 'blue'),
-            ('status', response.status, 'yellow'),
-            ('duration', duration, 'green'),
-            ('utc_time', timestamp, 'magenta'),
-            ('ip', ip, 'red'),
-            ('host', host, 'red'),
-            ('params', args, 'blue')
-        ]
+            log_params = [
+                ('method', request.method, 'blue'),
+                ('path', request.path, 'blue'),
+                ('status', response.status, 'yellow'),
+                ('duration', duration, 'green'),
+                ('utc_time', timestamp, 'magenta'),
+                ('ip', ip, 'red'),
+                ('host', host, 'red'),
+                ('params', args, 'blue')
+            ]
 
-        request_id = request.headers.get('X-Request-ID')
-        if request_id:
-            log_params.append(('request_id', request_id, 'yellow'))
+            request_id = request.headers.get('X-Request-ID')
+            if request_id:
+                log_params.append(('request_id', request_id, 'yellow'))
 
-        parts = []
-        for name, value, _color in log_params:
-            part = f'"{name}":"{value}"'
-            parts.append(part)
-        line = '{' + ",".join(parts) + '}'
+            parts = []
+            for name, value, _color in log_params:
+                part = f'"{name}":"{value}"'
+                parts.append(part)
+            line = '{' + ",".join(parts) + '}'
 
-        logger.info(line)
+            logger.info(line)
 
         return response

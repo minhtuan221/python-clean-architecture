@@ -1,7 +1,8 @@
-from app.domain.model import ConnectionPool
-from app.domain.model.role import Role, PermissionPolicy
 from datetime import datetime
 from typing import List
+
+from app.domain.model import ConnectionPool
+from app.domain.model.role import Role, PermissionPolicy
 
 
 class RoleRepository(object):
@@ -33,6 +34,14 @@ class RoleRepository(object):
                 Role.name.like(f'%{name}%')).filter(Role.deleted_at == None).all()
         return roles
 
+    def search_with_permission(self, name: str, offset: int = 0, limit: int = 10) -> List[Role]:
+        with self.db.new_session() as db:
+            roles: List[Role] = db.session.query(Role).filter(
+                Role.name.like(f'%{name}%')).filter(Role.deleted_at == None).order_by(Role.updated_at.desc()).offset(offset).limit(limit).all()
+            # for r in roles:
+            #     r.list_permissions = r.permissions.all()
+        return roles
+
     def update(self, role: Role) -> Role:
         with self.db.new_session() as db:
             role.updated_at = datetime.now()
@@ -62,11 +71,11 @@ class RoleRepository(object):
                 PermissionPolicy.role_id.in_(role_ids)).all()
         return p
 
-    def remove_permission(self, role: Role, permission: PermissionPolicy) -> Role:
+    def remove_permission(self, role_id: int, permission: str) -> Role:
         with self.db.new_session() as db:
-            role.permissions.remove_permission(permission)
-            db.session.add(role)
-        return role
+            db.session.query(PermissionPolicy).filter(PermissionPolicy.role_id == role_id).filter(
+                PermissionPolicy.permission == permission).delete()
+        return Role(id=role_id)
 
     def delete(self, role_id: int):
         with self.db.new_session() as db:

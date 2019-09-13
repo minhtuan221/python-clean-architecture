@@ -1,12 +1,13 @@
 from typing import List
 
 from app.domain import validator
-from app.pkgs import errors
-from app.domain.model.user import Role
 from app.domain.model.role import PermissionPolicy
+from app.domain.model.user import Role
+from app.infrastructure.persistence.access_policy import AccessPolicyRepository
 from app.infrastructure.persistence.role import RoleRepository
 from app.infrastructure.persistence.user import UserRepository
-from app.infrastructure.persistence.access_policy import AccessPolicyRepository
+from app.pkgs import errors
+from app.pkgs.query import get_start_stop_pos
 
 
 class UserRoleService(object):
@@ -31,6 +32,8 @@ class UserRoleService(object):
     def find_by_id(self, role_id: int):
         validator.validate_id(role_id)
         role: Role = self.role_repo.find(role_id)
+        permissions = self.role_repo.find_permission(role)
+        role.list_permissions = permissions
         if role:
             return role
         raise errors.record_not_found
@@ -45,7 +48,7 @@ class UserRoleService(object):
         description = description.lower()
         validator.validate_name(name)
         validator.validate_short_paragraph(description)
-        role = self.find_by_id(role_id)
+        role = self.role_repo.find(role_id)
         role.name = name
         role.description = description
         r: Role = self.role_repo.update(role)
@@ -57,6 +60,11 @@ class UserRoleService(object):
         role = self.role_repo.delete(role_id)
         self.access_policy_repo.change_role(role, note='delete role')
         return role
+
+    def search_roles_with_permission(self, name: str, page: int = 1, page_size: int = 10):
+        o, l = get_start_stop_pos(page, page_size)
+        roles = self.role_repo.search_with_permission(name, o, l)
+        return roles
 
     def append_role_to_user(self, user_id: int, role_id: int):
         validator.validate_id(user_id)
@@ -104,12 +112,12 @@ class UserRoleService(object):
         return permissions
 
     def remove_permission_to_role(self, role_id: int, permission: str):
+        print('remove_permission_to_role', role_id, permission)
         permission = permission.lower()
         validator.validate_id(role_id)
         role = self.role_repo.find(role_id)
         if not role:
             raise errors.record_not_found
-        p = self.role_repo.find_one_permission(role_id, permission)
-        r = self.role_repo.remove_permission(role, p)
+        r = self.role_repo.remove_permission(role_id, permission)
         self.access_policy_repo.change_role(r, note='remove permission')
         return r
