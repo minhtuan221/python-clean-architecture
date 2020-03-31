@@ -60,7 +60,7 @@ def init_user(ctx, email, password):
               help='alembic config file for migration. Run python migrate.py for migrating database'
               )
 @click.pass_context
-def migrate(ctx, alembic_config_file):
+def change_migrate(ctx, alembic_config_file):
     click.echo(
         'Migrate: change database alembic config file to migrate. Please run `python migrate.py` for migrating database')
     mode = ctx.obj['mode']

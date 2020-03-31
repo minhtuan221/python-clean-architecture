@@ -1,4 +1,5 @@
 from alembic.config import main
+from app import config
 # please check sqlalchemy.uri config in alembic.ini before run migration
 
 # example cli:
@@ -15,5 +16,16 @@ from alembic.config import main
 # alembic history --verbose
 
 
+def migrate(alembic_config_file: str = 'alembic.ini'):
+    import configparser
+    alembic_config = configparser.ConfigParser()
+    alembic_config.read(alembic_config_file)
+    alembic_config['alembic']['sqlalchemy.url'] = config.config['production'].DATABASE_URL
+    with open(alembic_config_file, 'w') as configfile:
+        alembic_config.write(configfile)
+    print('update migration config successful')
+
+
 if __name__ == "__main__":
+    migrate()
     main()
