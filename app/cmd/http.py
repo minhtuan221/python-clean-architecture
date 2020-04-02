@@ -70,8 +70,8 @@ def create_flask_app(config_object):
 def create_sanic_app(config_object):
     sanic_app: Sanic = Sanic(__name__)
     sanic_app.config.from_object(config_object)
-    Compress(sanic_app)
-    CORS(sanic_app, automatic_options=True)
+    # Compress(sanic_app)
+    # CORS(sanic_app, automatic_options=True)
 
     from app.infrastructure.http.sanic_adapter.user import user_controller
     from app.infrastructure.http.sanic_adapter.admin import admin_controller

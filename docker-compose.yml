@@ -1,0 +1,16 @@
+version: '3'
+services:
+    web:
+        build: .
+        expose:
+        - "5000"
+    redis:
+        image: "redis:alpine"
+    nginx:
+        image: nginx:1.16
+        volumes:
+            - /python-clean-architecture/nginx.conf:/etc/nginx/nginx.conf
+        depends_on:
+            - web
+        ports:
+            - "4000:4000"

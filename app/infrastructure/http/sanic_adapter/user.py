@@ -1,5 +1,6 @@
 from sanic import blueprints
 from sanic.request import Request
+import requests
 
 from app.cmd.http import user_service, sanic_adapter_middleware as middleware
 
@@ -8,6 +9,12 @@ user_controller = blueprints.Blueprint(__name__)
 confirm_path = '/user/confirm/'
 reset_password_path = '/user/reset_password/'
 
+
+@user_controller.route('/', methods=['GET'])
+@middleware.error_handler
+def welcome(request: Request):
+    ex = requests.get("https://example.com/")
+    return {"message": ex.text}
 
 @user_controller.route('/users', methods=['POST'])
 @middleware.error_handler

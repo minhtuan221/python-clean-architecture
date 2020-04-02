@@ -24,7 +24,7 @@ class Config(object):
     DB_SERVER = '0.0.0.0'
     PORT = 5000
     DATABASE_URL = "sqlite:///./test.db"
-    LOG_FOLDER = '/home/minhtuan/Documents/python-world/python-clean-architecture/logs'
+    LOG_FOLDER = './logs'
     PRIVATE_KEY = open(private_key_file).read()
     PUBLIC_KEY = open(public_key_file).read()
     REQUEST_MAX_SIZE = 1000000  # 1mb
@@ -72,4 +72,4 @@ config = {
     'test': TestingConfig
 }
 
-cli_config = config['production']
+cli_config: Config = config['production']

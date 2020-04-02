@@ -10,6 +10,7 @@ from sanic.response import json, HTTPResponse as Response
 from app.domain.usecase.user import UserService
 from app.pkgs import errors
 from app.pkgs.errors import Error, HttpStatusCode
+import traceback
 
 
 class Middleware(object):
@@ -35,6 +36,7 @@ class Middleware(object):
             except Error as e:
                 return json(e.to_json(), status=e.code())
             except Exception as e:
+                traceback.print_exc()
                 self.logger.error(e, exc_info=True)
                 return json(dict(data=None, error=f'Unknown error: {str(e)}'),
                             status=HttpStatusCode.Internal_Server_Error)

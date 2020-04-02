@@ -1,0 +1,26 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-clean-architecture
+  labels:
+    app: web.python
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web.python
+  template:
+    metadata:
+      labels:
+        app: web.python
+    spec:
+      containers:
+        - name: front-end
+          image: nginx
+          ports:
+            - containerPort: 80
+        - name: web
+          image: python-clean-architecture_web
+          ports:
+            - containerPort: 5000
