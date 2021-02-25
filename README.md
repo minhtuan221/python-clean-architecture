@@ -27,3 +27,6 @@ The paths at first line are declared in my gunicorn_start script, something like
 /my/virtualenv/bin/gunicorn OPTIONS \
     --access-logfile /path/to/my/logs/gunicorn-access.log \
     --error-logfile /path/to/my/logs/gunicorn-error.log
+
+uvicorn app.cmd.http:create_fastapi_app --reload
+env MODE=develop uvicorn app.cmd.http:create_fastapi_app --reload

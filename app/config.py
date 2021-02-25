@@ -1,4 +1,5 @@
 import json
+import os
 
 
 def read_config(file_name: str = "config.json") -> dict:
@@ -56,13 +57,13 @@ class DevelopmentConfig(Config):
     DB_SERVER = '0.0.0.0'
     DEBUG = True
     PORT = json_config.get('PORT', 5000)
-    DATABASE_URL = json_config.get('sqlalchemy.url', 'sqlite:///./test.db')
+    DATABASE_URL = 'sqlite:///../test.db'
 
 
 class TestingConfig(Config):
     DB_SERVER = 'localhost'
     DEBUG = True
-    DATABASE_URL = 'sqlite:///:memory:'
+    DATABASE_URL = 'sqlite:///../test.db'
 
 
 config = {
@@ -72,4 +73,11 @@ config = {
     'test': TestingConfig
 }
 
-cli_config: Config = config['production']
+
+if 'MODE' in os.environ:
+    env = os.environ['MODE']
+else:
+    env = 'develop'
+
+
+cli_config: Config = config[env]

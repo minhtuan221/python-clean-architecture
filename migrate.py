@@ -6,6 +6,7 @@ from app import config
 # alembic init alembic
 # alembic revision --autogenerate -m "add root_cause table"
 
+# alembic upgrade head --sql
 # alembic upgrade head
 # alembic upgrade +2
 # alembic downgrade -1
@@ -20,9 +21,9 @@ def migrate(alembic_config_file: str = 'alembic.ini'):
     import configparser
     alembic_config = configparser.ConfigParser()
     alembic_config.read(alembic_config_file)
-    alembic_config['alembic']['sqlalchemy.url'] = config.config['production'].DATABASE_URL
-    with open(alembic_config_file, 'w') as configfile:
-        alembic_config.write(configfile)
+    # alembic_config['alembic']['sqlalchemy.url'] = config.config['production'].DATABASE_URL
+    # with open(alembic_config_file, 'w') as configfile:
+    #     alembic_config.write(configfile)
     print('update migration config successful')
 
 

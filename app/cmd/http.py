@@ -1,5 +1,6 @@
 from flask import Flask
 from sanic import Sanic
+from fastapi import FastAPI
 from sanic_cors import CORS
 
 from app.cmd.center_store import CenterStore
@@ -8,7 +9,7 @@ from app.domain.usecase.user import UserService
 from app.domain.usecase.user_role import UserRoleService
 from app.infrastructure.http.flask_adapter.middleware import Middleware, set_logger
 from app.infrastructure.http.sanic_adapter import middleware as sanic_utils
-from app.infrastructure.http.sanic_adapter.compress import Compress
+from app.infrastructure.http.fastapi_adapter.middle_ware import FastAPIMiddleware
 from app.infrastructure.persistence.access_policy import AccessPolicyRepository
 from app.infrastructure.persistence.blacklist_token import BlacklistTokenRepository
 from app.infrastructure.persistence.role import RoleRepository
@@ -31,6 +32,7 @@ user_service = UserService(
 
 middleware = Middleware(user_service, center_store.error_logger)
 sanic_adapter_middleware = sanic_utils.Middleware(user_service, center_store.error_logger)
+fastapi_middleware = FastAPIMiddleware(user_service, None)
 
 
 def create_first_time_config(admin_email, admin_password):
@@ -85,6 +87,17 @@ def create_sanic_app(config_object):
         sanic_app.config.ACCESS_LOG = None
 
     return sanic_app
+
+
+def create_fastapi_app():
+    app = FastAPI(docs_url='/spec/api')
+
+    from app.infrastructure.http.fastapi_adapter.admin import fastapi_admin
+    from app.infrastructure.http.fastapi_adapter.user import fastapi_user
+
+    app.include_router(fastapi_admin, prefix='/api')
+    app.include_router(fastapi_user, prefix='/api')
+    return app
 
 
 app = create_sanic_app(cli_config)

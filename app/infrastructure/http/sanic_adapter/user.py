@@ -1,6 +1,6 @@
+import requests
 from sanic import blueprints
 from sanic.request import Request
-import requests
 
 from app.cmd.http import user_service, sanic_adapter_middleware as middleware
 
@@ -16,17 +16,19 @@ def welcome(request: Request):
     ex = requests.get("https://example.com/")
     return {"message": ex.text}
 
+
 @user_controller.route('/users', methods=['POST'])
 @middleware.error_handler
 def sign_up(request: Request):
     content: dict = request.json
     email = content.get('email', '')
     password = content.get('password', '')
-    token = user_service.sign_up_new_user(email, password, confirm_url=request.url_for('user_confirm_sign_up', token=''))
+    token = user_service.sign_up_new_user(email, password,
+                                          confirm_url=request.url_for('user_confirm_sign_up', token=''))
     return {'token': token}
 
 
-@user_controller.route(confirm_path+'<token>', methods=['GET'])
+@user_controller.route(confirm_path + '<token>', methods=['GET'])
 @middleware.error_handler
 def user_confirm_sign_up(request: Request, token):
     confirm = user_service.confirm_user_email(token)
@@ -40,11 +42,12 @@ def user_confirm_sign_up(request: Request, token):
 def user_reset_password(request: Request):
     content: dict = request.json
     email = content.get('email', '')
-    user_service.request_reset_user_password(email, confirm_url=request.url_for('user_confirm_reset_password', token=''))
+    user_service.request_reset_user_password(email,
+                                             confirm_url=request.url_for('user_confirm_reset_password', token=''))
     return {'message': f'Confirmation link was sent to the email {email}'}
 
 
-@user_controller.route(reset_password_path+'<token>', methods=['GET'])
+@user_controller.route(reset_password_path + '<token>', methods=['GET'])
 @middleware.error_handler
 def user_confirm_reset_password(request: Request, token):
     confirm = user_service.confirm_reset_user_password(token)
@@ -67,7 +70,8 @@ def login(request: Request):
 @middleware.error_handler
 @middleware.require_permissions()
 def get_user_profile(request: Request):
-    return {'user': request.headers['user'], 'roles': request.headers['roles'], 'permission': request.headers['permissions']}
+    return {'user': request.headers['user'], 'roles': request.headers['roles'],
+            'permission': request.headers['permissions']}
 
 
 @user_controller.route('/users/<id>/password', methods=['PUT'])
