@@ -69,7 +69,7 @@ class FastAPIMiddleware(object):
                 traceback.print_exc()
                 # self.logger.error(e, exc_info=True)
                 return JSONResponse(content=dict(data=None, error=f'Unknown error: {str(e)}'),
-                                    status_code=HttpStatusCode.Internal_Server_Error)
+                                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return wrapper
 
@@ -132,13 +132,13 @@ class FastAPIMiddleware(object):
                 u = self._verify_auth_token(request)
                 if not u:
                     # any handler for OPTION method should be here
-                    raise Error("permission denied", HttpStatusCode.Forbidden)
+                    raise Error("permission denied", status.HTTP_403_FORBIDDEN)
                 if len(permissions) > 0:
                     for p in permissions:
                         if p in u.permissions:
                             # fastapi don't need to pass request obj to it. but we should
                             return await fn(request, *args, **kwargs)
-                    raise Error("permission denied", HttpStatusCode.Forbidden)
+                    raise Error("permission denied", status.HTTP_403_FORBIDDEN)
                 return await fn(request, *args, **kwargs)
 
             return permit

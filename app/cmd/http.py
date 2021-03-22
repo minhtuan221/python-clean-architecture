@@ -90,14 +90,14 @@ def create_sanic_app(config_object):
 
 
 def create_fastapi_app():
-    app = FastAPI(docs_url='/spec/api')
+    fast_app = FastAPI(docs_url='/spec/api')
 
     from app.infrastructure.http.fastapi_adapter.admin import fastapi_admin
     from app.infrastructure.http.fastapi_adapter.user import fastapi_user
 
-    app.include_router(fastapi_admin, prefix='/api')
-    app.include_router(fastapi_user, prefix='/api')
-    return app
+    fast_app.include_router(fastapi_admin, prefix='/api')
+    fast_app.include_router(fastapi_user, prefix='/api')
+    return fast_app
 
 
 app = create_sanic_app(cli_config)

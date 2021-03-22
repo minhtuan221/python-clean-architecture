@@ -26,7 +26,7 @@ async def create_new_user_by_admin(request: Request, e: LoginReq):
 
 @fastapi_user.post('/users', tags=["user"], response_model=Token)
 @middleware.error_handler
-def sign_up(request: Request, u: LoginReq):
+async def sign_up(request: Request, u: LoginReq):
     email = u.email
     password = u.password
     token = user_service.sign_up_new_user(email, password,
@@ -36,7 +36,7 @@ def sign_up(request: Request, u: LoginReq):
 
 @fastapi_user.get(confirm_path + '{token}', tags=["user"], response_model=ErrorResponse)
 @middleware.error_handler
-def user_confirm_sign_up(request: Request, token: str):
+async def user_confirm_sign_up(request: Request, token: str):
     confirm = user_service.confirm_user_email(token)
     if confirm:
         return {'data': 'User confirmed. Please login again'}
@@ -45,7 +45,7 @@ def user_confirm_sign_up(request: Request, token: str):
 
 @fastapi_user.post('/user/reset_password', tags=["user"], response_model=ErrorResponse)
 @middleware.error_handler
-def user_reset_password(request: Request, u: LoginReq):
+async def user_reset_password(request: Request, u: LoginReq):
     email = u.email
     user_service.request_reset_user_password(email, confirm_url=request.url_for('user_confirm_reset_password', token=''))
     return {'data': f'Confirmation link was sent to the email {email}'}
@@ -53,7 +53,7 @@ def user_reset_password(request: Request, u: LoginReq):
 
 @fastapi_user.post(reset_password_path + '{token}', tags=["user"], response_model=ErrorResponse)
 @middleware.error_handler
-def user_confirm_reset_password(request: Request, token):
+async def user_confirm_reset_password(request: Request, token):
     confirm = user_service.confirm_reset_user_password(token)
     if confirm:
         return {'data': 'Password reset. Please check your email to receive new password'}
@@ -62,7 +62,7 @@ def user_confirm_reset_password(request: Request, token):
 
 @fastapi_user.post('/login', tags=["user"], response_model=Token)
 @middleware.error_handler
-def login(request: Request, u: LoginReq):
+async def login(request: Request, u: LoginReq):
     email = u.email
     password = u.password
     token = user_service.login(email, password)
@@ -72,7 +72,7 @@ def login(request: Request, u: LoginReq):
 @fastapi_user.get('/users/profile', tags=["user"], response_model=UserAPI)
 @middleware.error_handler
 @middleware.require_permissions()
-def get_user_profile(request: Request):
+async def get_user_profile(request: Request):
     return {'user': request.headers['user'], 'roles': request.headers['roles'],
             'permission': request.headers['permissions']}
 
@@ -80,7 +80,7 @@ def get_user_profile(request: Request):
 @fastapi_user.put('/users/{_id}/password', tags=["user"], response_model=UserAPI)
 @middleware.error_handler
 @middleware.require_permissions()
-def update_password(request: Request, _id: str, u: UpdatePasswordAPI):
+async def update_password(request: Request, _id: str, u: UpdatePasswordAPI):
     old_password = u.old_password
     new_password = u.new_password
     retype_password = u.retype_password
@@ -91,7 +91,7 @@ def update_password(request: Request, _id: str, u: UpdatePasswordAPI):
 @fastapi_user.get('/logout', tags=["user"], response_model=ErrorResponse)
 @middleware.error_handler
 @middleware.require_permissions()
-def logout(request: Request):
+async def logout(request: Request):
     token = middleware.get_bearer_token(request)
     r = user_service.logout(token)
     return {'data': r}
