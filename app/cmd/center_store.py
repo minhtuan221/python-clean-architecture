@@ -36,6 +36,7 @@ container.build()
 
 user_role_service = container.get_singleton(UserRoleService)
 user_service = container.get_singleton(UserService)
+
 middleware = Middleware(user_service, error_logger)
 sanic_adapter_middleware = sanic_utils.Middleware(user_service, error_logger)
 fastapi_middleware = FastAPIMiddleware(user_service, None)

@@ -3,9 +3,10 @@ from typing import List, Set
 
 import jwt
 
+from app.domain.utils import validation
+from app.domain.utils import generator
 from app.domain.utils import error_collection
 from app.config import Config
-from app.domain import validator
 from app.domain.model.user import User
 from app.domain.service.email import EmailService
 from app.infrastructure.persistence.access_policy import AccessPolicyRepository
@@ -33,8 +34,8 @@ class UserService(object):
         self.email_service = email_service
 
     def validate_user_email_password(self, email: str, password: str):
-        validator.validate_email(email)
-        validator.validate_password(password)
+        validation.validate_email(email)
+        validation.validate_password(password)
         current_user = self.user_repo.count_by_email(email)
         if current_user > 0:
             raise error_collection.EmailAlreadyExist()
@@ -96,7 +97,7 @@ class UserService(object):
             user = self.user_repo.find_by_email(email)
             if not user:
                 raise error_collection.RecordNotFound
-            new_password = validator.gen_reset_password()
+            new_password = generator.gen_reset_password()
             user.hash_password(new_password)
             user = self.user_repo.update(user)
             self.access_policy_repo.change_user(user, note=f'update user password')
@@ -105,7 +106,7 @@ class UserService(object):
         return False
 
     def login(self, email: str, password: str):
-        validator.validate_email(email)
+        validation.validate_email(email)
         user, roles, permissions = self.user_repo.find_user_for_auth(email)
         if user:
             if user.verify_password(password):
@@ -136,14 +137,14 @@ class UserService(object):
         return f'logout at: {t.blacklisted_on}'
 
     def find_by_id(self, user_id: int):
-        validator.validate_id(user_id)
+        validation.validate_id(user_id)
         user = self.user_repo.find(user_id)
         if user:
             return user
         raise error_collection.RecordNotFound
 
     def find_user_info_by_id(self, user_id: int):
-        validator.validate_id(user_id)
+        validation.validate_id(user_id)
         user, roles, permissions = self.user_repo.find_all_user_info_by_id(user_id)
         user.roles = roles
         if user:
@@ -160,7 +161,7 @@ class UserService(object):
         if new_password != retype_password:
             raise errors.Error(
                 'New Password and retype password is not matched')
-        validator.validate_password(new_password)
+        validation.validate_password(new_password)
         user = self.find_by_id(user_id)
         if not user:
             raise error_collection.RecordNotFound
@@ -192,7 +193,7 @@ class UserService(object):
         return True
 
     def delete(self, user_id: int):
-        validator.validate_id(user_id)
+        validation.validate_id(user_id)
         user = self.user_repo.delete(user_id)
         if not user:
             raise error_collection.RecordNotFound
