@@ -58,12 +58,12 @@ class Config(object):
             self.SQL_ECHO = False
             self.DEBUG = True
             self.PORT = os.environ.get('PORT', 5000)
-            self.DATABASE_URL = 'sqlite:///../test.db'
+            self.DATABASE_URL = 'sqlite:///./test.db'
         elif mode == 'test':
             self.DB_SERVER = 'localhost'
             self.SQL_ECHO = False
             self.DEBUG = True
-            self.DATABASE_URL = 'sqlite:///../test.db'
+            self.DATABASE_URL = 'sqlite:///./test.db'
 
 
 if 'MODE' in os.environ:

@@ -15,15 +15,31 @@ from app.domain.model.access_policy import AccessPolicy
 
 
 class ConnectionPool(object):
-    def __init__(self, connection_string: str, echo=False):
+    def __init__(self, connection_string: str, echo:bool = False):
         self.engine = create_engine(connection_string, echo=echo)
         self.connection_string: str = connection_string
         session_factory = scoped_session(
             sessionmaker(bind=self.engine, expire_on_commit=False, autocommit=False)
         )
         self.session_factory = session_factory
+        self._test_session: Session = None
+        self._is_test: bool = False
+
+    def open_test_session(self):
+        print('warning: this is test session. Do not use in production')
+        self._test_session = self.session_factory()
+        self._is_test = True
+
+    def close_test_session(self):
+        self._test_session.rollback()
+        self._test_session.close()
+        self._test_session = None
+        self._is_test = False
+        print('\nwarning: test session is closed')
 
     def new_session(self):
+        if self._is_test:
+            return self._test_session
         new_session = self.session_factory()
         return SQLAlchemyDBConnection(session=new_session)
 

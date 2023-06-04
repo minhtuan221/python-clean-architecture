@@ -7,7 +7,7 @@ from logging import Logger
 from flask import Flask, request, g
 from flask import jsonify
 
-from app.domain.usecase.user import UserService
+from app.domain.service.user import UserService
 from app.pkgs import errors
 from app.pkgs.errors import Error, HttpStatusCode
 

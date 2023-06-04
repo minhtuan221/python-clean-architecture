@@ -6,7 +6,7 @@ import jwt
 from app.config import Config
 from app.domain import validator
 from app.domain.model.user import User
-from app.domain.usecase.email import EmailService
+from app.domain.service.email import EmailService
 from app.infrastructure.persistence.access_policy import AccessPolicyRepository
 from app.infrastructure.persistence.blacklist_token import BlacklistTokenRepository
 from app.infrastructure.persistence.user import UserRepository

@@ -1,6 +1,6 @@
 from app.domain.model import ConnectionPool
-from app.domain.usecase.user import UserService
-from app.domain.usecase.user_role import UserRoleService
+from app.domain.service.user import UserService
+from app.domain.service.user_role import UserRoleService
 from app.infrastructure.http.fastapi_adapter.middle_ware import FastAPIMiddleware
 from app.infrastructure.http.flask_adapter.middleware import Middleware
 from app.infrastructure.http.sanic_adapter import middleware as sanic_utils

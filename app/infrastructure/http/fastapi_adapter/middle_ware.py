@@ -9,7 +9,7 @@ from functools import wraps
 from logging import Logger
 from typing import List
 
-from app.domain.usecase.user import UserService
+from app.domain.service.user import UserService
 from app.pkgs import errors
 from app.pkgs.errors import Error, HttpStatusCode
 import traceback

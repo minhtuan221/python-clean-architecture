@@ -7,7 +7,7 @@ from sanic import Sanic
 from sanic.request import Request
 from sanic.response import json, HTTPResponse as Response
 
-from app.domain.usecase.user import UserService
+from app.domain.service.user import UserService
 from app.pkgs import errors
 from app.pkgs.errors import Error, HttpStatusCode
 import traceback
