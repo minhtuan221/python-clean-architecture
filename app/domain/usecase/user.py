@@ -3,6 +3,7 @@ from typing import List, Set
 
 import jwt
 
+from app.config import Config
 from app.domain import validator
 from app.domain.model.user import User
 from app.domain.usecase.email import EmailService
@@ -17,14 +18,17 @@ from app.pkgs.type_check import type_check
 
 class UserService(object):
 
-    def __init__(self, user_repo: UserRepository, access_blacklist: AccessPolicyRepository,
-                 blacklist_token_repo: BlacklistTokenRepository, public_key: str, secret_key='',
+    def __init__(self,
+                 user_repo: UserRepository,
+                 access_blacklist: AccessPolicyRepository,
+                 blacklist_token_repo: BlacklistTokenRepository,
+                 config: Config,
                  email_service: EmailService = None):
         self.user_repo: UserRepository = user_repo
         self.access_policy_repo = access_blacklist
         self.blacklist_token_repo = blacklist_token_repo
-        self.secret_key = secret_key
-        self.public_key = public_key
+        self.secret_key = config.SECRET_KEY
+        self.public_key = config.PUBLIC_KEY
         self.email_service = email_service
 
     def validate_user_email_password(self, email: str, password: str):

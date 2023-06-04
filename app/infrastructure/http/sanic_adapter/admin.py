@@ -1,7 +1,8 @@
 from sanic.blueprints import Blueprint
 from sanic.request import Request
 
-from app.cmd.http import user_service, sanic_adapter_middleware as middleware, user_role_service
+from app.cmd.center_store import user_role_service, user_service, \
+    sanic_adapter_middleware as middleware
 from app.domain.model.user import User
 
 admin_controller = Blueprint(__name__)

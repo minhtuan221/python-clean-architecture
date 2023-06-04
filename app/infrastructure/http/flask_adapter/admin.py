@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 
-from app.cmd.http import user_service, middleware, user_role_service
+from app.cmd.center_store import user_role_service, user_service, middleware
 from app.domain.model.user import User
 
 admin_controller = Blueprint('admin_controller', __name__)

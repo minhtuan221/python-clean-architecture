@@ -2,7 +2,7 @@ from typing import List
 
 from fastapi import APIRouter, Request
 
-from app.cmd.http import user_service, fastapi_middleware as middleware, user_role_service
+from app.cmd.center_store import user_role_service, user_service, fastapi_middleware as middleware
 from app.pkgs import errors as ec
 from .api_model import LoginReq, UserAPI, UserConfirm, RoleAPI, User2PermissionAPI
 
