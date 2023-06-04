@@ -57,24 +57,3 @@ def error_handler(func):
     return wrapper
 
 
-record_not_found = Error('Record not found')
-email_already_exist = Error('Email already exist', HttpStatusCode.Bad_Request)
-email_cannot_be_found = Error(
-    'Email cannot be found', HttpStatusCode.Bad_Request)
-password_verifying_failed = Error(
-    'Password is not match', HttpStatusCode.Bad_Request)
-token_expired = Error(
-    'Signature expired. Please log in again', HttpStatusCode.Unauthorized)
-invalid_token = Error('Invalid token. Please log in again.',
-                      HttpStatusCode.Unauthorized)
-token_blacklisted = Error(
-    'Token blacklisted. Please log in again.', HttpStatusCode.Unauthorized)
-authorization_header_empty = Error(
-    'The Authorization header is either empty or has no token', HttpStatusCode.Unauthorized)
-authorization_type_wrong = Error(
-    'The Authorization header is wrong type or invalid', HttpStatusCode.Unauthorized)
-unconfirmed_email = Error(
-    'The email address is not confirmed', HttpStatusCode.Unauthorized)
-reset_access_policy = Error(
-    'Token expired because of changing in user and role', HttpStatusCode.Unauthorized)
-role_name_already_exist = Error('role name already exist', HttpStatusCode.Bad_Request)

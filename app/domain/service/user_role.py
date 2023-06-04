@@ -1,5 +1,6 @@
 from typing import List
 
+from app.domain.utils import error_collection
 from app.domain import validator
 from app.domain.model.role import PermissionPolicy
 from app.domain.model.user import Role
@@ -25,7 +26,7 @@ class UserRoleService(object):
         role = Role(name=name, description=description)
         r = self.role_repo.find_by_name(name)
         if r:
-            raise errors.role_name_already_exist
+            raise error_collection.RoleNameAlreadyExist
         role = self.role_repo.create(role)
         return role
 
@@ -36,7 +37,7 @@ class UserRoleService(object):
         role.list_permissions = permissions
         if role:
             return role
-        raise errors.record_not_found
+        raise error_collection.RecordNotFound
 
     def search(self, name: str) -> List[Role]:
         roles = self.role_repo.search(name)
@@ -71,10 +72,10 @@ class UserRoleService(object):
         validator.validate_id(role_id)
         user = self.user_repo.find(user_id)
         if not user:
-            raise errors.record_not_found
+            raise error_collection.RecordNotFound
         role = self.role_repo.find(role_id)
         if not role:
-            raise errors.record_not_found
+            raise error_collection.RecordNotFound
         u = self.user_repo.append_role(user, role)
         self.access_policy_repo.change_user(u, note='append role')
         return u
@@ -84,10 +85,10 @@ class UserRoleService(object):
         validator.validate_id(role_id)
         user = self.user_repo.find(user_id)
         if not user:
-            raise errors.record_not_found
+            raise error_collection.RecordNotFound
         role = self.role_repo.find(role_id)
         if not role:
-            raise errors.record_not_found
+            raise error_collection.RecordNotFound
         u = self.user_repo.remove_role(user, role)
         self.access_policy_repo.change_user(u, note='remove role')
         return u
@@ -98,7 +99,7 @@ class UserRoleService(object):
         validator.validate_name(permission)
         role = self.role_repo.find(role_id)
         if not role:
-            raise errors.record_not_found
+            raise error_collection.RecordNotFound
         self.role_repo.append_permission(role, permission)
         self.access_policy_repo.change_role(role, note='append permission')
         return role
@@ -107,7 +108,7 @@ class UserRoleService(object):
         validator.validate_id(role_id)
         role = self.role_repo.find(role_id)
         if not role:
-            raise errors.record_not_found
+            raise error_collection.RecordNotFound
         permissions: List[PermissionPolicy] = self.role_repo.find_permission(role)
         return permissions
 
@@ -116,7 +117,7 @@ class UserRoleService(object):
         validator.validate_id(role_id)
         role = self.role_repo.find(role_id)
         if not role:
-            raise errors.record_not_found
+            raise error_collection.RecordNotFound
         r = self.role_repo.remove_permission(role_id, permission)
         self.access_policy_repo.change_role(r, note='remove permission')
         return r

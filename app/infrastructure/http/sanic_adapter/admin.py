@@ -46,7 +46,7 @@ def find_one(request: Request, id):
 @middleware.error_handler
 @middleware.require_permissions('admin')
 def find_one_with_all_profile(request: Request, id: int):
-    user, permissions = user_service.find_all_user_info_by_id(int(id))
+    user, permissions = user_service.find_user_info_by_id(int(id))
     if user:
         user_dict = user.to_json()
         user_dict['permissions'] = [p.to_json() for p in permissions]

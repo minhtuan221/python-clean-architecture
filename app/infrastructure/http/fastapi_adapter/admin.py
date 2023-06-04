@@ -3,10 +3,7 @@ from typing import List
 from fastapi import APIRouter, Request
 
 from app.cmd.center_store import user_role_service, user_service, fastapi_middleware as middleware
-from app.pkgs import errors as ec
 from .api_model import LoginReq, UserAPI, UserConfirm, RoleAPI, User2PermissionAPI
-
-record_not_found = ec.record_not_found
 
 fastapi_admin = APIRouter()
 
@@ -35,21 +32,17 @@ async def find_all(request: Request, search_word: str = '', page: int = 1):
 @middleware.require_permissions('admin')
 async def find_one(request: Request, _id: str):
     user = user_service.find_by_id(int(_id))
-    if user:
-        return user.to_json()
-    raise record_not_found
+    return user.to_json()
 
 
 @fastapi_admin.get('/admin/users/{_id}/profile', tags=["admin"], response_model=UserAPI)
 @middleware.error_handler
 @middleware.require_permissions('admin')
 async def find_one_with_all_profile(request: Request, _id: str):
-    user, permissions = user_service.find_all_user_info_by_id(int(_id))
-    if user:
-        user_dict = user.to_json()
-        user_dict['permissions'] = [p.to_json() for p in permissions]
-        return user_dict
-    raise record_not_found
+    user, permissions = user_service.find_user_info_by_id(int(_id))
+    user_dict = user.to_json()
+    user_dict['permissions'] = [p.to_json() for p in permissions]
+    return user_dict
 
 
 @fastapi_admin.put('/admin/users/{_id}/confirm', tags=["admin"], response_model=UserAPI)
