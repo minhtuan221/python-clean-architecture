@@ -98,7 +98,7 @@ def remove_role_to_user_by_admin():
     content: dict = request.get_json(silent=True)
     user_id = content.get('user_id', 0)
     role_id = content.get('role_id', 0)
-    u = user_role_service.remove_role_to_user(user_id, role_id)
+    u = user_role_service.remove_role_from_user(user_id, role_id)
     return u.to_json()
 
 
@@ -143,5 +143,5 @@ def remove_permission_to_role_by_admin():
     content: dict = request.get_json(silent=True)
     user_id = content.get('user_id', 0)
     role_id = content.get('role_id', 0)
-    r = user_role_service.remove_permission_to_role(user_id, role_id)
+    r = user_role_service.remove_permission_from_role(user_id, role_id)
     return r.to_json()

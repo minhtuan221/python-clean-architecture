@@ -107,7 +107,7 @@ async def append_role_to_user_by_admin(request: Request, u: User2PermissionAPI):
 async def remove_role_to_user_by_admin(request: Request, u: User2PermissionAPI):
     user_id = u.user_id
     role_id = u.role_id
-    u = user_role_service.remove_role_to_user(user_id, role_id)
+    u = user_role_service.remove_role_from_user(user_id, role_id)
     return u.to_json()
 
 
@@ -136,5 +136,5 @@ async def append_permission_to_role_by_admin(request: Request, u: User2Permissio
 async def remove_permission_to_role_by_admin(request: Request, u: User2PermissionAPI):
     role_id = u.role_id
     permission = u.permission
-    r = user_role_service.remove_permission_to_role(role_id, permission)
+    r = user_role_service.remove_permission_from_role(role_id, permission)
     return r.to_json()

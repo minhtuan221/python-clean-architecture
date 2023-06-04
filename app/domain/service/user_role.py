@@ -79,7 +79,7 @@ class UserRoleService(object):
         self.access_policy_repo.change_user(u, note='append role')
         return u
 
-    def remove_role_to_user(self, user_id: int, role_id: int):
+    def remove_role_from_user(self, user_id: int, role_id: int):
         validator.validate_id(user_id)
         validator.validate_id(role_id)
         user = self.user_repo.find(user_id)
@@ -111,8 +111,7 @@ class UserRoleService(object):
         permissions: List[PermissionPolicy] = self.role_repo.find_permission(role)
         return permissions
 
-    def remove_permission_to_role(self, role_id: int, permission: str):
-        print('remove_permission_to_role', role_id, permission)
+    def remove_permission_from_role(self, role_id: int, permission: str):
         permission = permission.lower()
         validator.validate_id(role_id)
         role = self.role_repo.find(role_id)

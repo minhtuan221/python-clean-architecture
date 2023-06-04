@@ -73,4 +73,4 @@ def create_fastapi_app():
     return fast_app
 
 
-app = create_sanic_app(cli_config)
+app = create_fastapi_app()

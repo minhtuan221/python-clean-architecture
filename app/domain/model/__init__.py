@@ -15,7 +15,7 @@ from app.domain.model.access_policy import AccessPolicy
 
 
 class ConnectionPool(object):
-    def __init__(self, connection_string: str, echo:bool = False):
+    def __init__(self, connection_string: str, echo: bool = False):
         self.engine = create_engine(connection_string, echo=echo)
         self.connection_string: str = connection_string
         session_factory = scoped_session(
@@ -24,14 +24,22 @@ class ConnectionPool(object):
         self.session_factory = session_factory
         self._test_session: Session = None
         self._is_test: bool = False
+        self._test_engine = None
 
     def open_test_session(self):
         print('warning: this is test session. Do not use in production')
-        self._test_session = self.session_factory()
+        # create_engine("sqlite:///:memory:") will work as well, but we use file to make more real
+        # world tests
+        self._test_engine = create_engine('sqlite:///./test_session.db', echo=False)
+        self._test_session = scoped_session(
+            sessionmaker(bind=self._test_engine, expire_on_commit=False, autocommit=False)
+        )
+        # Create database tables
+        Base.metadata.create_all(self._test_engine)
         self._is_test = True
 
     def close_test_session(self):
-        self._test_session.rollback()
+        Base.metadata.drop_all(self._test_engine)
         self._test_session.close()
         self._test_session = None
         self._is_test = False
@@ -39,7 +47,7 @@ class ConnectionPool(object):
 
     def new_session(self):
         if self._is_test:
-            return self._test_session
+            return TestDBConnection(self._test_session)
         new_session = self.session_factory()
         return SQLAlchemyDBConnection(session=new_session)
 
@@ -47,7 +55,7 @@ class ConnectionPool(object):
 class SQLAlchemyDBConnection(object):
     """SQLAlchemy database connection"""
 
-    def __init__(self, session=None):
+    def __init__(self, session: Session):
         self.session: Session = session
         self.error = None
 
@@ -64,6 +72,21 @@ class SQLAlchemyDBConnection(object):
         finally:
             self.session.close()
             self.error = None
+
+
+class TestDBConnection(SQLAlchemyDBConnection):
+    """SQLAlchemy database connection for test only"""
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        try:
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            self.error = e
+            raise e
+        finally:
+            # don't need to close test session
+            pass
 
 
 @contextmanager
@@ -102,4 +125,3 @@ def init_database(connection_string: str = "mysql://admin:123456@/field_sale"):
     msg("Creating Tree Table:")
 
     Base.metadata.create_all(engine)
-
