@@ -1,7 +1,8 @@
 from sanic.blueprints import Blueprint
 from sanic.request import Request
 
-from app.cmd.http import user_service, sanic_adapter_middleware as middleware, user_role_service
+from app.cmd.center_store import user_role_service, user_service, \
+    sanic_adapter_middleware as middleware
 from app.domain.model.user import User
 
 admin_controller = Blueprint(__name__)
@@ -45,7 +46,7 @@ def find_one(request: Request, id):
 @middleware.error_handler
 @middleware.require_permissions('admin')
 def find_one_with_all_profile(request: Request, id: int):
-    user, permissions = user_service.find_all_user_info_by_id(int(id))
+    user, permissions = user_service.find_user_info_by_id(int(id))
     if user:
         user_dict = user.to_json()
         user_dict['permissions'] = [p.to_json() for p in permissions]
@@ -107,7 +108,7 @@ def remove_role_to_user_by_admin(request: Request):
     content: dict = request.json
     user_id = content.get('user_id', 0)
     role_id = content.get('role_id', 0)
-    u = user_role_service.remove_role_to_user(user_id, role_id)
+    u = user_role_service.remove_role_from_user(user_id, role_id)
     return u.to_json()
 
 
@@ -146,5 +147,5 @@ def remove_permission_to_role_by_admin(request: Request):
     content: dict = request.json
     role_id = content.get('role_id', 0)
     permission = content.get('permission', '')
-    r = user_role_service.remove_permission_to_role(role_id, permission)
+    r = user_role_service.remove_permission_from_role(role_id, permission)
     return r.to_json()

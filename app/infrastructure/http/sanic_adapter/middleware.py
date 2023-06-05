@@ -7,7 +7,8 @@ from sanic import Sanic
 from sanic.request import Request
 from sanic.response import json, HTTPResponse as Response
 
-from app.domain.usecase.user import UserService
+import app.domain.utils.error_collection
+from app.domain.service.user import UserService
 from app.pkgs import errors
 from app.pkgs.errors import Error, HttpStatusCode
 import traceback
@@ -55,15 +56,15 @@ class Middleware(object):
             try:
                 auth_type, token = request.headers['Authorization'].split(None, 1)
             except ValueError:
-                raise errors.authorization_header_empty
+                raise app.domain.utils.error_collection.AuthorizationHeaderEmpty
         else:
-            raise errors.authorization_header_empty
+            raise app.domain.utils.error_collection.AuthorizationHeaderEmpty
 
         # if the auth type does not match, we act as if there is no auth
         # this is better than failing directly, as it allows the callback
         # to handle special cases, like supporting multiple auth types
         if auth_type.lower() != 'bearer':
-            raise errors.authorization_type_wrong
+            raise app.domain.utils.error_collection.AuthorizationTypeWrong
         return token
 
     def verify_auth_token(self, f):

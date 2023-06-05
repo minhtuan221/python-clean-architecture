@@ -9,7 +9,8 @@ from functools import wraps
 from logging import Logger
 from typing import List
 
-from app.domain.usecase.user import UserService
+from app.domain.utils import error_collection
+from app.domain.service.user import UserService
 from app.pkgs import errors
 from app.pkgs.errors import Error, HttpStatusCode
 import traceback
@@ -82,15 +83,15 @@ class FastAPIMiddleware(object):
             try:
                 auth_type, token = request.headers['Authorization'].split(None, 1)
             except ValueError:
-                raise errors.authorization_header_empty
+                raise error_collection.AuthorizationHeaderEmpty
         else:
-            raise errors.authorization_header_empty
+            raise error_collection.AuthorizationHeaderEmpty
 
         # if the auth type does not match, we act as if there is no auth
         # this is better than failing directly, as it allows the callback
         # to handle special cases, like supporting multiple auth types
         if auth_type.lower() != 'bearer':
-            raise errors.authorization_type_wrong
+            raise error_collection.AuthorizationTypeWrong
         return token
 
     def verify_auth_token(self, f):

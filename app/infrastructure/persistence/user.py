@@ -1,6 +1,7 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
+from app.domain.utils import error_collection
 from app.domain.model import ConnectionPool
 from app.domain.model import PermissionPolicy
 from app.domain.model.user import User, Role
@@ -29,7 +30,7 @@ class UserRepository(object):
             user: User = db.session.query(User).filter_by(
                 email=email).filter(User.deleted_at == None).first()
             if not user:
-                raise errors.record_not_found
+                raise error_collection.RecordNotFound
             roles: List[Role] = user.roles.all()
             roles_ids: List[int] = []
             for role in roles:
@@ -42,7 +43,7 @@ class UserRepository(object):
             user: User = db.session.query(User).filter_by(
                 id=user_id).filter(User.deleted_at == None).first()
             if not user:
-                raise errors.record_not_found
+                raise error_collection.RecordNotFound
             roles: List[Role] = user.roles.all()
             roles_ids: List[int] = []
             for role in roles:
@@ -76,9 +77,11 @@ class UserRepository(object):
             db.session.add(user)
         return user
 
-    def delete(self, user_id: int):
+    def delete(self, user_id: int) -> Optional[User]:
         with self.db.new_session() as db:
             user: User = self.find(user_id)
+            if not user:
+                return user
             user.deleted_at = datetime.now()
             db.session.add(user)
         return user

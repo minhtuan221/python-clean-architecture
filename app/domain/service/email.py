@@ -1,5 +1,5 @@
 from app.infrastructure.smtp import Mail, create_message
-from app.pkgs.token import TokenFactory
+from app.pkgs.token_factory import TokenFactory
 from flask import render_template
 
 

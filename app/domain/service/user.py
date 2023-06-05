@@ -3,43 +3,49 @@ from typing import List, Set
 
 import jwt
 
-from app.domain import validator
+from app.domain.utils import validation
+from app.domain.utils import generator
+from app.domain.utils import error_collection
+from app.config import Config
 from app.domain.model.user import User
-from app.domain.usecase.email import EmailService
+from app.domain.service.email import EmailService
 from app.infrastructure.persistence.access_policy import AccessPolicyRepository
 from app.infrastructure.persistence.blacklist_token import BlacklistTokenRepository
 from app.infrastructure.persistence.user import UserRepository
 from app.pkgs import errors
 from app.pkgs.query import get_start_stop_pos
-from app.pkgs.time import time_to_int
+from app.pkgs.time_utils import time_to_int
 from app.pkgs.type_check import type_check
 
 
 class UserService(object):
 
-    def __init__(self, user_repo: UserRepository, access_blacklist: AccessPolicyRepository,
-                 blacklist_token_repo: BlacklistTokenRepository, public_key: str, secret_key='',
+    def __init__(self,
+                 user_repo: UserRepository,
+                 access_blacklist: AccessPolicyRepository,
+                 blacklist_token_repo: BlacklistTokenRepository,
+                 config: Config,
                  email_service: EmailService = None):
         self.user_repo: UserRepository = user_repo
         self.access_policy_repo = access_blacklist
         self.blacklist_token_repo = blacklist_token_repo
-        self.secret_key = secret_key
-        self.public_key = public_key
+        self.secret_key = config.SECRET_KEY
+        self.public_key = config.PUBLIC_KEY
         self.email_service = email_service
 
     def validate_user_email_password(self, email: str, password: str):
-        validator.validate_email(email)
-        validator.validate_password(password)
+        validation.validate_email(email)
+        validation.validate_password(password)
         current_user = self.user_repo.count_by_email(email)
         if current_user > 0:
-            raise errors.email_already_exist
+            raise error_collection.EmailAlreadyExist()
 
     def create_new_user(self, email: str, password: str):
         email = email.lower()
         self.validate_user_email_password(email, password)
         user = User(email=email, password=password)
         user.hash_password(password)
-        # set is_confirm to true
+        # set is_confirm to true until we complete setup email confirmation
         user.is_confirmed = True
         return self.user_repo.create(user)
 
@@ -63,7 +69,7 @@ class UserService(object):
         if email:
             user = self.user_repo.find_by_email(email)
             if not user:
-                raise errors.record_not_found
+                raise error_collection.RecordNotFound
             if user.is_confirmed:
                 raise errors.Error('Account already confirmed. Please login.', errors.HttpStatusCode.Bad_Request)
             else:
@@ -76,7 +82,7 @@ class UserService(object):
     def request_reset_user_password(self, email: str, confirm_url: str):
         user = self.user_repo.find_by_email(email)
         if not user:
-            raise errors.record_not_found
+            raise error_collection.RecordNotFound
         if self.email_service:
             self.email_service.send_confirm_email(user.email, confirm_url, template='user/reset_password.html')
         return user
@@ -90,8 +96,8 @@ class UserService(object):
         if email:
             user = self.user_repo.find_by_email(email)
             if not user:
-                raise errors.record_not_found
-            new_password = validator.gen_reset_password()
+                raise error_collection.RecordNotFound
+            new_password = generator.gen_reset_password()
             user.hash_password(new_password)
             user = self.user_repo.update(user)
             self.access_policy_repo.change_user(user, note=f'update user password')
@@ -100,7 +106,7 @@ class UserService(object):
         return False
 
     def login(self, email: str, password: str):
-        validator.validate_email(email)
+        validation.validate_email(email)
         user, roles, permissions = self.user_repo.find_user_for_auth(email)
         if user:
             if user.verify_password(password):
@@ -123,42 +129,42 @@ class UserService(object):
                 # create and return token here
                 return token.decode("utf-8")
             else:
-                raise errors.password_verifying_failed
-        raise errors.email_cannot_be_found
+                raise error_collection.PasswordVerifyingFailed
+        raise error_collection.EmailCannotBeFound
 
     def logout(self, auth_token: str):
         t = self.blacklist_token_repo.add_token(auth_token)
         return f'logout at: {t.blacklisted_on}'
 
     def find_by_id(self, user_id: int):
-        validator.validate_id(user_id)
+        validation.validate_id(user_id)
         user = self.user_repo.find(user_id)
         if user:
             return user
-        raise errors.record_not_found
+        raise error_collection.RecordNotFound
 
-    def find_all_user_info_by_id(self, user_id: int):
-        validator.validate_id(user_id)
+    def find_user_info_by_id(self, user_id: int):
+        validation.validate_id(user_id)
         user, roles, permissions = self.user_repo.find_all_user_info_by_id(user_id)
         user.roles = roles
         if user:
             return user, permissions
-        raise errors.record_not_found
+        raise error_collection.RecordNotFound
 
-    def search(self, email: str, page=1, page_size=10) -> List[dict]:
+    def search(self, email: str, page=1, page_size=10) -> List[User]:
         o, l = get_start_stop_pos(page, page_size)
         users = self.user_repo.search_with_roles(email, offset=o, limit=l)
         return users
 
     @type_check
     def update_password(self, user_id: int, old_password: str, new_password: str, retype_password: str):
-        if new_password == retype_password:
+        if new_password != retype_password:
             raise errors.Error(
                 'New Password and retype password is not matched')
-        validator.validate_password(new_password)
+        validation.validate_password(new_password)
         user = self.find_by_id(user_id)
         if not user:
-            raise errors.record_not_found
+            raise error_collection.RecordNotFound
         if user.verify_password(old_password):
             # confirm old password
             user.hash_password(new_password)
@@ -170,7 +176,7 @@ class UserService(object):
     def update_is_confirmed(self, user_id: int, is_confirmed: bool):
         user = self.find_by_id(user_id)
         if not user:
-            raise errors.record_not_found
+            raise error_collection.RecordNotFound
         user.is_confirmed = is_confirmed
         user = self.user_repo.update(user)
         self.access_policy_repo.change_user(user, note=f'update user is_confirmed = {user.is_confirmed}')
@@ -187,8 +193,10 @@ class UserService(object):
         return True
 
     def delete(self, user_id: int):
-        validator.validate_id(user_id)
+        validation.validate_id(user_id)
         user = self.user_repo.delete(user_id)
+        if not user:
+            raise error_collection.RecordNotFound
         self.access_policy_repo.change_user(user, note='delete user')
         return user
 
@@ -226,10 +234,10 @@ class UserService(object):
                 raise errors.Error('User is not confirmed', errors.HttpStatusCode.Unauthorized)
             is_blacklisted_token = self.blacklist_token_repo.is_blacklist(auth_token)
             if is_blacklisted_token:
-                raise errors.token_blacklisted
+                raise error_collection.TokenBlacklisted
             else:
                 return payload
         except jwt.ExpiredSignatureError:
-            raise errors.token_expired
+            raise error_collection.TokenExpired
         except jwt.InvalidTokenError:
-            raise errors.invalid_token
+            raise error_collection.InvalidToken

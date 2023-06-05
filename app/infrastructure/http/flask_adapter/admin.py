@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 
-from app.cmd.http import user_service, middleware, user_role_service
+from app.cmd.center_store import user_role_service, user_service, middleware
 from app.domain.model.user import User
 
 admin_controller = Blueprint('admin_controller', __name__)
@@ -47,7 +47,7 @@ def find_one(id):
 @middleware.verify_auth_token
 @middleware.require_permissions('admin')
 def find_one_with_all_profile(id: int):
-    user, permissions = user_service.find_all_user_info_by_id(int(id))
+    user, permissions = user_service.find_user_info_by_id(int(id))
     if user:
         user_dict = user.to_json()
         user_dict['permissions'] = [p.to_json() for p in permissions]
@@ -98,7 +98,7 @@ def remove_role_to_user_by_admin():
     content: dict = request.get_json(silent=True)
     user_id = content.get('user_id', 0)
     role_id = content.get('role_id', 0)
-    u = user_role_service.remove_role_to_user(user_id, role_id)
+    u = user_role_service.remove_role_from_user(user_id, role_id)
     return u.to_json()
 
 
@@ -143,5 +143,5 @@ def remove_permission_to_role_by_admin():
     content: dict = request.get_json(silent=True)
     user_id = content.get('user_id', 0)
     role_id = content.get('role_id', 0)
-    r = user_role_service.remove_permission_to_role(user_id, role_id)
+    r = user_role_service.remove_permission_from_role(user_id, role_id)
     return r.to_json()
