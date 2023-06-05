@@ -24,7 +24,7 @@ def setup_before_tests():
     # You can perform any necessary teardown or cleanup here
 
 
-test_case = [
+test_cases = [
     TestContainer,
     TestUserRoleService,
     TestUserService

@@ -9,38 +9,24 @@ from sqlalchemy import Column, String, Integer, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 
 from . import Base
+from ._serializable import Serializable
 from .role import Role
 
 
-class User(Base):
+class User(Base, Serializable):
     __tablename__ = 'users'
     id: int = Column(Integer, primary_key=True)
     email: str = Column(String(128), unique=True)
     password: str = Column(String(255))
     is_confirmed: bool = Column(Boolean, default=False)
 
-    roles: List[Role] = relationship("Role", secondary='user_role',
-                                     backref="user", lazy='dynamic')
-
-    created_at: datetime = Column(
-        DateTime, index=True, default=datetime.utcnow)
-    updated_at: datetime = Column(
-        DateTime, index=True, default=datetime.utcnow)
-    deleted_at: Optional[datetime] = Column(DateTime, index=True)
+    roles: List[Role] = relationship("Role", secondary='user_role', backref="user", lazy='dynamic')
 
     def to_json(self) -> dict:
-        roles = []
-        for r in self.roles:
-            roles.append(r.to_json())
-        return {
-            'id': self.id,
-            'email': self.email,
-            'is_confirmed': self.is_confirmed,
-            'roles': roles,
-            'created_at': self.created_at,
-            'updated_at': self.updated_at,
-            'deleted_at': self.deleted_at
-        }
+        json_data = super().to_json()  # Call the to_json method of the base class
+        roles = [r.to_json() for r in self.roles]
+        json_data['roles'] = roles
+        return json_data
 
     def json(self) -> dict:
         return self.to_json()

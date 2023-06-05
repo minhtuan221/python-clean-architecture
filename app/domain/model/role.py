@@ -5,6 +5,7 @@ from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.domain.model import Base
+from app.domain.model._serializable import Serializable
 
 
 class PermissionPolicy(Base):
@@ -19,7 +20,7 @@ class PermissionPolicy(Base):
         }
 
 
-class Role(Base):
+class Role(Base, Serializable):
     __tablename__ = 'roles'
     id: int = Column(Integer, primary_key=True)
     name: str = Column(String(128), unique=True)
@@ -27,23 +28,7 @@ class Role(Base):
     permissions = relationship("PermissionPolicy", backref="role", lazy='dynamic')
     list_permissions: List[PermissionPolicy] = []
 
-    created_at: datetime = Column(
-        DateTime, index=True, default=datetime.utcnow)
-    updated_at: datetime = Column(
-        DateTime, index=True, default=datetime.utcnow)
-    deleted_at: Optional[datetime] = Column(DateTime, index=True)
-
     def to_json(self) -> dict:
-        permissions = []
-        for p in self.list_permissions:
-            permissions.append(p.to_json())
-        # print('self.permissions', self.permissions)
-        return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'permissions': permissions,
-            'created_at': self.created_at,
-            'updated_at': self.updated_at,
-            'deleted_at': self.deleted_at
-        }
+        json_data = super().to_json()  # Call the to_json method of the base class
+        json_data['permissions'] = [p.to_json() for p in self.list_permissions]
+        return json_data

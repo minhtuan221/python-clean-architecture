@@ -12,6 +12,7 @@ from app.domain.model.user import User, UserRole
 from app.domain.model.role import Role, PermissionPolicy
 from app.domain.model.blacklist_token import BlacklistToken
 from app.domain.model.access_policy import AccessPolicy
+from app.domain.model.process import Process
 
 
 class ConnectionPool(object):
