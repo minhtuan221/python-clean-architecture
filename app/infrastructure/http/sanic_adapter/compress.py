@@ -1,5 +1,7 @@
 import gzip
 
+import app.cmd.center_store
+
 DEFAULT_MIME_TYPES = frozenset([
     'text/html', 'text/css', 'text/xml',
     'application/json',
@@ -22,7 +24,7 @@ class Compress(object):
         for k, v in defaults:
             app.config.setdefault(k, v)
 
-        @app.middleware('response')
+        @app.cmd.center_store.middleware('response')
         async def compress_response(request, response):
             return await self._compress_response(request, response)
 

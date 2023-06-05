@@ -2,7 +2,7 @@ import requests
 from sanic import blueprints
 from sanic.request import Request
 
-from app.cmd.http import user_service, sanic_adapter_middleware as middleware
+from app.cmd.center_store import user_service, sanic_adapter_middleware as middleware
 
 user_controller = blueprints.Blueprint(__name__)
 

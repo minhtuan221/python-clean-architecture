@@ -1,13 +1,13 @@
 from contextlib import contextmanager
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session as db_session
+from sqlalchemy.orm import sessionmaker, Session
 from typing import Callable
 from sqlalchemy.orm import scoped_session
 
 Base = declarative_base()
 
-# It's must to list all model here
+# It must list all model here
 from app.domain.model.user import User, UserRole
 from app.domain.model.role import Role, PermissionPolicy
 from app.domain.model.blacklist_token import BlacklistToken
@@ -15,36 +15,51 @@ from app.domain.model.access_policy import AccessPolicy
 
 
 class ConnectionPool(object):
-    def __init__(self, connection_string: str, echo=False):
+    def __init__(self, connection_string: str, echo: bool = False):
         self.engine = create_engine(connection_string, echo=echo)
         self.connection_string: str = connection_string
-        session_factory = scoped_session(sessionmaker(
-            bind=self.engine, expire_on_commit=False))
+        session_factory = scoped_session(
+            sessionmaker(bind=self.engine, expire_on_commit=False, autocommit=False)
+        )
         self.session_factory = session_factory
+        self._test_session: Session = None
+        self._is_test: bool = False
+        self._test_engine = None
+
+    def open_test_session(self):
+        print('warning: this is test session. Do not use in production')
+        # create_engine("sqlite:///:memory:") will work as well, but we use file to make more real
+        # world tests
+        self._test_engine = create_engine('sqlite:///./test_session.db', echo=False)
+        self._test_session = scoped_session(
+            sessionmaker(bind=self._test_engine, expire_on_commit=False, autocommit=False)
+        )
+        # Create database tables
+        Base.metadata.create_all(self._test_engine)
+        self._is_test = True
+
+    def close_test_session(self):
+        Base.metadata.drop_all(self._test_engine)
+        self._test_session.close()
+        self._test_session = None
+        self._is_test = False
+        print('\nwarning: test session is closed')
 
     def new_session(self):
+        if self._is_test:
+            return TestDBConnection(self._test_session)
         new_session = self.session_factory()
-        return SQLAlchemyDBConnection(self.connection_string,
-                                      engine=self.engine,
-                                      session=new_session)
+        return SQLAlchemyDBConnection(session=new_session)
 
 
 class SQLAlchemyDBConnection(object):
     """SQLAlchemy database connection"""
 
-    def __init__(self, connection_string: str, engine=None, session=None):
-        if engine:
-            self.engine = engine
-        else:
-            self.engine = create_engine(connection_string)
-        self.connection_string: str = connection_string
-        self.session: db_session = session
+    def __init__(self, session: Session):
+        self.session: Session = session
         self.error = None
 
     def __enter__(self):
-        # session_factory = sessionmaker(bind=self.engine)
-        # Session = scoped_session(session_factory)
-        # self.session = Session()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -59,8 +74,23 @@ class SQLAlchemyDBConnection(object):
             self.error = None
 
 
+class TestDBConnection(SQLAlchemyDBConnection):
+    """SQLAlchemy database connection for test only"""
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        try:
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            self.error = e
+            raise e
+        finally:
+            # don't need to close test session
+            pass
+
+
 @contextmanager
-def session_scope(self, handler: Callable = None) -> db_session:
+def session_scope(self, handler: Callable = None) -> Session:
     """Provide a transactional scope around a series of operations.
     It can work with asyncIO and thread-safe
     """
@@ -95,4 +125,3 @@ def init_database(connection_string: str = "mysql://admin:123456@/field_sale"):
     msg("Creating Tree Table:")
 
     Base.metadata.create_all(engine)
-

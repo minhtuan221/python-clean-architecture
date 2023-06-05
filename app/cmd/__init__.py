@@ -28,8 +28,7 @@ def cli(ctx, mode: str):
 def init_db(ctx, sql_url: str):
     click.echo('Initialized the database')
     mode = ctx.obj['mode']
-    if mode in config.config:
-        config.cli_config = config.config[mode]
+    config.cli_config = config.Config(mode)
     init_database(config.cli_config.DATABASE_URL)
 
 
@@ -67,7 +66,7 @@ def change_migrate(ctx, alembic_config_file):
     import configparser
     alembic_config = configparser.ConfigParser()
     alembic_config.read(alembic_config_file)
-    alembic_config['alembic']['sqlalchemy.url'] = config.config[mode].DATABASE_URL
+    alembic_config['alembic']['sqlalchemy.url'] = config.cli_config.DATABASE_URL
     with open(alembic_config_file, 'w') as configfile:
         alembic_config.write(configfile)
 
@@ -86,8 +85,7 @@ def runserver(ctx, sql_url: str, port: str):
     click.echo('Server start running')
     mode = ctx.obj['mode']
     click.echo(f'Running in {mode} mode')
-    if mode in config.config:
-        config.cli_config = config.config[mode]
+    config.cli_config = config.Config(mode)
     from .http import app
     app.run(host='0.0.0.0', port=config.cli_config.PORT, debug=True)
 

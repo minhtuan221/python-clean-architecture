@@ -8,7 +8,6 @@ def read_config(file_name: str = "config.json") -> dict:
     return cfg
 
 
-json_config: dict = read_config('./config.json')
 development_key = 'dev'
 production_key = 'prod'
 private_key_file = './private.pem'
@@ -25,6 +24,7 @@ class Config(object):
     DB_SERVER = '0.0.0.0'
     PORT = 5000
     DATABASE_URL = "sqlite:///./test.db"
+    SQL_ECHO = True
     LOG_FOLDER = './logs'
     PRIVATE_KEY = open(private_key_file).read()
     PUBLIC_KEY = open(public_key_file).read()
@@ -38,40 +38,32 @@ class Config(object):
     MAIL_USE_SSL = True
 
     # gmail authentication
-    MAIL_USERNAME = json_config.get('APP_MAIL_USERNAME', '')
-    MAIL_PASSWORD = json_config.get('APP_MAIL_PASSWORD', '')
+    MAIL_USERNAME = os.environ.get('APP_MAIL_USERNAME', '')
+    MAIL_PASSWORD = os.environ.get('APP_MAIL_PASSWORD', '')
 
     # mail accounts
     MAIL_DEFAULT_SENDER = 'from@example.com'
 
-
-class ProductionConfig(Config):
-    """Uses production database server."""
-    DB_SERVER = '0.0.0.0'
-    PORT = json_config.get('PORT', 5000)
-    DATABASE_URL = json_config.get('sqlalchemy.url', 'sqlite:///./test.db')
-    LOG_FOLDER = json_config.get('log-folder', '/home/minhtuan/Documents/python-world/python-clean-architecture/logs')
-
-
-class DevelopmentConfig(Config):
-    DB_SERVER = '0.0.0.0'
-    DEBUG = True
-    PORT = json_config.get('PORT', 5000)
-    DATABASE_URL = 'sqlite:///../test.db'
-
-
-class TestingConfig(Config):
-    DB_SERVER = 'localhost'
-    DEBUG = True
-    DATABASE_URL = 'sqlite:///../test.db'
-
-
-config = {
-    'default': Config,
-    'develop': DevelopmentConfig,
-    'production': ProductionConfig,
-    'test': TestingConfig
-}
+    def __init__(self, mode: str = 'default'):
+        mode = mode.lower()
+        if mode == 'production':
+            """Uses production database server."""
+            self.DB_SERVER = '0.0.0.0'
+            self.SQL_ECHO = False
+            self.PORT = os.environ.get('PORT', 5000)
+            self.DATABASE_URL = os.environ.get('sqlalchemy.url', 'sqlite:///./test.db')
+            self.LOG_FOLDER = os.environ.get('log-folder', './logs')
+        elif mode == 'develop':
+            self.DB_SERVER = '0.0.0.0'
+            self.SQL_ECHO = False
+            self.DEBUG = True
+            self.PORT = os.environ.get('PORT', 5000)
+            self.DATABASE_URL = 'sqlite:///./test.db'
+        elif mode == 'test':
+            self.DB_SERVER = 'localhost'
+            self.SQL_ECHO = False
+            self.DEBUG = True
+            self.DATABASE_URL = 'sqlite:///./test.db'
 
 
 if 'MODE' in os.environ:
@@ -79,5 +71,4 @@ if 'MODE' in os.environ:
 else:
     env = 'develop'
 
-
-cli_config: Config = config[env]
+cli_config: Config = Config(env)
