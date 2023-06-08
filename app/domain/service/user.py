@@ -29,15 +29,18 @@ class UserService(object):
         self.user_repo: UserRepository = user_repo
         self.access_policy_repo = access_blacklist
         self.blacklist_token_repo = blacklist_token_repo
-        self.secret_key = config.SECRET_KEY
+        self.private_key = config.PRIVATE_KEY
         self.public_key = config.PUBLIC_KEY
         self.email_service = email_service
+
+    def is_exist_email(self, email: str) -> bool:
+        count = self.user_repo.count_by_email(email)
+        return count > 0
 
     def validate_user_email_password(self, email: str, password: str):
         validation.validate_email(email)
         validation.validate_password(password)
-        current_user = self.user_repo.count_by_email(email)
-        if current_user > 0:
+        if self.is_exist_email(email):
             raise error_collection.EmailAlreadyExist()
 
     def create_new_user(self, email: str, password: str):
@@ -127,18 +130,24 @@ class UserService(object):
                 }
                 token = self.encode_auth_token(user, other_payload_info=other_info)
                 # create and return token here
-                return token.decode("utf-8")
+                return token
             else:
                 raise error_collection.PasswordVerifyingFailed
         raise error_collection.EmailCannotBeFound
 
-    def logout(self, auth_token: str):
+    def logout(self, auth_token: str) -> str:
         t = self.blacklist_token_repo.add_token(auth_token)
         return f'logout at: {t.blacklisted_on}'
 
-    def find_by_id(self, user_id: int):
+    def find_by_id(self, user_id: int) -> User:
         validation.validate_id(user_id)
         user = self.user_repo.find(user_id)
+        if user:
+            return user
+        raise error_collection.RecordNotFound
+
+    def find_by_email(self, email: str) -> User:
+        user = self.user_repo.find_by_email(email)
         if user:
             return user
         raise error_collection.RecordNotFound
@@ -200,7 +209,7 @@ class UserService(object):
         self.access_policy_repo.change_user(user, note='delete user')
         return user
 
-    def encode_auth_token(self, user: User, other_payload_info: dict):
+    def encode_auth_token(self, user: User, other_payload_info: dict) -> str:
         """
         Generates the Auth Token
         :return: string
@@ -214,7 +223,7 @@ class UserService(object):
             payload.update(other_payload_info)
             return jwt.encode(
                 payload,
-                self.secret_key,
+                self.private_key,
                 algorithm='RS256'
             )
         except Exception as e:

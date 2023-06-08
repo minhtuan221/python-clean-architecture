@@ -1,4 +1,5 @@
 from app.domain.model import ConnectionPool
+from app.domain.service.process import ProcessService
 from app.domain.service.user import UserService
 from app.domain.service.user_role import UserRoleService
 from app.infrastructure.http.fastapi_adapter.middle_ware import FastAPIMiddleware
@@ -6,6 +7,7 @@ from app.infrastructure.http.flask_adapter.middleware import Middleware
 from app.infrastructure.http.sanic_adapter import middleware as sanic_utils
 from app.infrastructure.persistence.access_policy import AccessPolicyRepository
 from app.infrastructure.persistence.blacklist_token import BlacklistTokenRepository
+from app.infrastructure.persistence.process import ProcessRepository
 from app.infrastructure.persistence.role import RoleRepository
 from app.infrastructure.persistence.user import UserRepository
 from app.pkgs.injector import Container
@@ -32,6 +34,9 @@ container.add_singleton(BlacklistTokenRepository)
 container.add_singleton(UserRoleService)
 container.add_singleton(UserService)
 container.add_singleton(Middleware)
+container.add_singleton(FastAPIMiddleware)
+container.add_singleton(ProcessRepository)
+container.add_singleton(ProcessService)
 container.build()
 
 user_role_service = container.get_singleton(UserRoleService)
@@ -39,4 +44,4 @@ user_service = container.get_singleton(UserService)
 
 middleware = Middleware(user_service, error_logger)
 sanic_adapter_middleware = sanic_utils.Middleware(user_service, error_logger)
-fastapi_middleware = FastAPIMiddleware(user_service, None)
+fastapi_middleware = container.get_singleton(FastAPIMiddleware)

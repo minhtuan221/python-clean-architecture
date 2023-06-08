@@ -78,6 +78,12 @@ class RoleNameAlreadyExist(Error):
     error_code: int = HttpStatusCode.Bad_Request
 
 
+@dataclass
+class RecordAlreadyExist(Error):
+    message: str = 'Record already exists'
+    error_code: int = HttpStatusCode.Bad_Request
+
+
 def test_raise_error():
     try:
         raise EmailAlreadyExist("adfakljdjkal")

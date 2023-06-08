@@ -18,13 +18,14 @@ def generate_name(prefix: str = 'test'):
 
 
 def gen_reset_password():
-    """
-    generate a 8 character password
+    """generate 8 character password
     :return: string - password
     """
-    uppercase = ''.join(random.choice(string.ascii_uppercase) for i in range(3))
-    lowercase = ''.join(random.choice(string.ascii_lowercase) for i in range(3))
+    uppercase = ''.join(random.choice(string.ascii_uppercase) for _ in range(3))
+    lowercase = ''.join(random.choice(string.ascii_lowercase) for _ in range(3))
     digit = random.choice(string.digits)
     symbol = random.choice(special_symbol)
     password = lowercase + digit + symbol + uppercase
     return password
+
+

@@ -5,10 +5,10 @@ from fastapi import APIRouter, Request
 from app.cmd.center_store import user_role_service, user_service, fastapi_middleware as middleware
 from .api_model import LoginReq, UserAPI, UserConfirm, RoleAPI, User2PermissionAPI
 
-fastapi_admin = APIRouter()
+admin_api = APIRouter()
 
 
-@fastapi_admin.post("/admin", tags=["admin"], response_model=UserAPI)
+@admin_api.post("/admin", tags=["admin"], response_model=UserAPI)
 @middleware.error_handler
 @middleware.require_permissions('admin', 'admin.create')
 async def create_new_user_by_admin(request: Request, e: LoginReq):
@@ -16,7 +16,7 @@ async def create_new_user_by_admin(request: Request, e: LoginReq):
     return user.to_json()
 
 
-@fastapi_admin.get('/admin/users', tags=["admin"], response_model=List[UserAPI])
+@admin_api.get('/admin/users', tags=["admin"], response_model=List[UserAPI])
 @middleware.error_handler
 @middleware.require_permissions('admin')
 async def find_all(request: Request, search_word: str = '', page: int = 1):
@@ -27,7 +27,7 @@ async def find_all(request: Request, search_word: str = '', page: int = 1):
     return res
 
 
-@fastapi_admin.get('/admin/users/{_id}', tags=["admin"], response_model=UserAPI)
+@admin_api.get('/admin/users/{_id}', tags=["admin"], response_model=UserAPI)
 @middleware.error_handler
 @middleware.require_permissions('admin')
 async def find_one(request: Request, _id: str):
@@ -35,7 +35,7 @@ async def find_one(request: Request, _id: str):
     return user.to_json()
 
 
-@fastapi_admin.get('/admin/users/{_id}/profile', tags=["admin"], response_model=UserAPI)
+@admin_api.get('/admin/users/{_id}/profile', tags=["admin"], response_model=UserAPI)
 @middleware.error_handler
 @middleware.require_permissions('admin')
 async def find_one_with_all_profile(request: Request, _id: str):
@@ -45,7 +45,7 @@ async def find_one_with_all_profile(request: Request, _id: str):
     return user_dict
 
 
-@fastapi_admin.put('/admin/users/{_id}/confirm', tags=["admin"], response_model=UserAPI)
+@admin_api.put('/admin/users/{_id}/confirm', tags=["admin"], response_model=UserAPI)
 @middleware.error_handler
 @middleware.require_permissions('admin', 'admin.update')
 async def update_is_confirmed(request: Request, _id: str, u: UserConfirm):
@@ -55,7 +55,7 @@ async def update_is_confirmed(request: Request, _id: str, u: UserConfirm):
 
 
 # admin role-permission base access control
-@fastapi_admin.post('/admin/roles', tags=["admin"], response_model=RoleAPI)
+@admin_api.post('/admin/roles', tags=["admin"], response_model=RoleAPI)
 @middleware.error_handler
 @middleware.require_permissions('admin', 'admin.create')
 async def create_new_role(request: Request, u: RoleAPI):
@@ -65,7 +65,7 @@ async def create_new_role(request: Request, u: RoleAPI):
     return role.to_json()
 
 
-@fastapi_admin.get('/admin/roles', tags=["admin"], response_model=List[RoleAPI])
+@admin_api.get('/admin/roles', tags=["admin"], response_model=List[RoleAPI])
 @middleware.error_handler
 @middleware.require_permissions('admin')
 async def view_role(request: Request, name: str, page: int):
@@ -76,7 +76,7 @@ async def view_role(request: Request, name: str, page: int):
     return roles_dict
 
 
-@fastapi_admin.get('/admin/roles/{role_id}', tags=["admin"], response_model=List[RoleAPI])
+@admin_api.get('/admin/roles/{role_id}', tags=["admin"], response_model=List[RoleAPI])
 @middleware.error_handler
 @middleware.require_permissions('admin')
 async def view_role_by_admin(request: Request, role_id: str):
@@ -84,7 +84,7 @@ async def view_role_by_admin(request: Request, role_id: str):
     return role.to_json()
 
 
-@fastapi_admin.post('/admin/users2roles', tags=["admin"], response_model=UserAPI)
+@admin_api.post('/admin/users2roles', tags=["admin"], response_model=UserAPI)
 @middleware.error_handler
 @middleware.require_permissions('admin', 'admin.update')
 async def append_role_to_user_by_admin(request: Request, u: User2PermissionAPI):
@@ -94,7 +94,7 @@ async def append_role_to_user_by_admin(request: Request, u: User2PermissionAPI):
     return user.to_json()
 
 
-@fastapi_admin.put('/admin/users2roles', tags=["admin"], response_model=UserAPI)
+@admin_api.put('/admin/users2roles', tags=["admin"], response_model=UserAPI)
 @middleware.error_handler
 @middleware.require_permissions('admin', 'admin.update')
 async def remove_role_to_user_by_admin(request: Request, u: User2PermissionAPI):
@@ -105,7 +105,7 @@ async def remove_role_to_user_by_admin(request: Request, u: User2PermissionAPI):
 
 
 # permission append, remove...
-@fastapi_admin.get('/admin/permissions', tags=["admin"], response_model=List[str])
+@admin_api.get('/admin/permissions', tags=["admin"], response_model=List[str])
 @middleware.error_handler
 @middleware.require_permissions('admin')
 async def view_all_available_permission_by_admin(request: Request):
@@ -113,7 +113,7 @@ async def view_all_available_permission_by_admin(request: Request):
     return p_list
 
 
-@fastapi_admin.post('/admin/roles2permissions', tags=["admin"], response_model=RoleAPI)
+@admin_api.post('/admin/roles2permissions', tags=["admin"], response_model=RoleAPI)
 @middleware.error_handler
 @middleware.require_permissions('admin', 'admin.update')
 async def append_permission_to_role_by_admin(request: Request, u: User2PermissionAPI):
@@ -123,7 +123,7 @@ async def append_permission_to_role_by_admin(request: Request, u: User2Permissio
     return r.to_json()
 
 
-@fastapi_admin.put('/admin/roles2permissions', tags=["admin"], response_model=RoleAPI)
+@admin_api.put('/admin/roles2permissions', tags=["admin"], response_model=RoleAPI)
 @middleware.error_handler
 @middleware.require_permissions('admin', 'admin.update')
 async def remove_permission_to_role_by_admin(request: Request, u: User2PermissionAPI):

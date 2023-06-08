@@ -35,12 +35,13 @@ class ConnectionPool(object):
         self._test_session = scoped_session(
             sessionmaker(bind=self._test_engine, expire_on_commit=False, autocommit=False)
         )
+        # should drop database first
+        Base.metadata.drop_all(self._test_engine)
         # Create database tables
         Base.metadata.create_all(self._test_engine)
         self._is_test = True
 
     def close_test_session(self):
-        Base.metadata.drop_all(self._test_engine)
         self._test_session.close()
         self._test_session = None
         self._is_test = False

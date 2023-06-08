@@ -1,3 +1,4 @@
+import requests
 from fastapi.testclient import TestClient
 
 
@@ -6,7 +7,7 @@ class APIClient:
         self.client = TestClient(app)
         self.token = token
 
-    def _make_request(self, method, url, **kwargs):
+    def _make_request(self, method, url, **kwargs) -> requests.Response:
         headers = kwargs.pop("headers", {})
         headers["Authorization"] = f"Bearer {self.token}"
         kwargs["headers"] = headers

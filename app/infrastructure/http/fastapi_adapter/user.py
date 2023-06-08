@@ -6,14 +6,14 @@ from app.cmd.center_store import user_service, fastapi_middleware as middleware
 from .api_model import LoginReq, UserAPI, UpdatePasswordAPI, Token
 from .middle_ware import ErrorResponse
 
-fastapi_user = APIRouter()
+user_api = APIRouter()
 
 
 confirm_path = '/user/confirm/'
 reset_password_path = '/user/reset_password/'
 
 
-@fastapi_user.post("/admin", tags=["admin"], response_model=UserAPI)
+@user_api.post("/admin", tags=["admin"], response_model=UserAPI)
 @middleware.error_handler
 @middleware.require_permissions('admin', 'admin.create')
 async def create_new_user_by_admin(request: Request, e: LoginReq):
@@ -21,7 +21,7 @@ async def create_new_user_by_admin(request: Request, e: LoginReq):
     return user.to_json()
 
 
-@fastapi_user.post('/users', tags=["user"], response_model=Token)
+@user_api.post('/users', tags=["user"], response_model=Token)
 @middleware.error_handler
 async def sign_up(request: Request, u: LoginReq):
     email = u.email
@@ -31,7 +31,7 @@ async def sign_up(request: Request, u: LoginReq):
     return {'token': token}
 
 
-@fastapi_user.get(confirm_path + '{token}', tags=["user"], response_model=ErrorResponse)
+@user_api.get(confirm_path + '{token}', tags=["user"], response_model=ErrorResponse)
 @middleware.error_handler
 async def user_confirm_sign_up(request: Request, token: str):
     confirm = user_service.confirm_user_email(token)
@@ -40,7 +40,7 @@ async def user_confirm_sign_up(request: Request, token: str):
     return {'error': 'User confirmation failed'}
 
 
-@fastapi_user.post('/user/reset_password', tags=["user"], response_model=ErrorResponse)
+@user_api.post('/user/reset_password', tags=["user"], response_model=ErrorResponse)
 @middleware.error_handler
 async def user_reset_password(request: Request, u: LoginReq):
     email = u.email
@@ -48,7 +48,7 @@ async def user_reset_password(request: Request, u: LoginReq):
     return {'data': f'Confirmation link was sent to the email {email}'}
 
 
-@fastapi_user.post(reset_password_path + '{token}', tags=["user"], response_model=ErrorResponse)
+@user_api.post(reset_password_path + '{token}', tags=["user"], response_model=ErrorResponse)
 @middleware.error_handler
 async def user_confirm_reset_password(request: Request, token):
     confirm = user_service.confirm_reset_user_password(token)
@@ -57,7 +57,7 @@ async def user_confirm_reset_password(request: Request, token):
     return {'error': 'Reset password confirmation failed'}
 
 
-@fastapi_user.post('/login', tags=["user"], response_model=Token)
+@user_api.post('/login', tags=["user"], response_model=Token)
 @middleware.error_handler
 async def login(request: Request, u: LoginReq):
     email = u.email
@@ -66,7 +66,7 @@ async def login(request: Request, u: LoginReq):
     return {'token': token}
 
 
-@fastapi_user.get('/users/profile', tags=["user"], response_model=UserAPI)
+@user_api.get('/users/profile', tags=["user"], response_model=UserAPI)
 @middleware.error_handler
 @middleware.require_permissions()
 async def get_user_profile(request: Request):
@@ -74,7 +74,7 @@ async def get_user_profile(request: Request):
             'permission': request.headers['permissions']}
 
 
-@fastapi_user.put('/users/{_id}/password', tags=["user"], response_model=UserAPI)
+@user_api.put('/users/{_id}/password', tags=["user"], response_model=UserAPI)
 @middleware.error_handler
 @middleware.require_permissions()
 async def update_password(request: Request, _id: str, u: UpdatePasswordAPI):
@@ -85,7 +85,7 @@ async def update_password(request: Request, _id: str, u: UpdatePasswordAPI):
     return user.to_json()
 
 
-@fastapi_user.get('/logout', tags=["user"], response_model=ErrorResponse)
+@user_api.get('/logout', tags=["user"], response_model=ErrorResponse)
 @middleware.error_handler
 @middleware.require_permissions()
 async def logout(request: Request):

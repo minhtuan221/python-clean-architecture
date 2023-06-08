@@ -15,12 +15,18 @@ def validate_id(_id: int):
 
 @type_check
 def validate_name(name: str):
-    # print('name', name)
-    # print(re.match("^[a-zA-Z0-9_.-]+$", 'admin') is None)
     if len(name) > 128:
         raise errors.Error('Name should not be longer than 128 characters')
     if re.match("^[a-zA-Z0-9_.-]+$", name) is None:
         raise errors.Error('It should contain a-z, A-Z, 0-9, _, -, . without any space')
+    return None
+
+
+def validate_name_with_space(name: str):
+    if len(name) > 128:
+        raise errors.Error('Name should not be longer than 128 characters')
+    if re.match("^[a-zA-Z0-9_. -]+$", name) is None:
+        raise errors.Error('It should contain a-z, A-Z, 0-9, _, -, ., and spaces without any leading/trailing spaces')
     return None
 
 
