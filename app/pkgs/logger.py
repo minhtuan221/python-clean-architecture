@@ -17,15 +17,12 @@ def set_gunicorn_custom_logger(path='./logs', is_absolute_path=False,
     """
     pathname = os.path.dirname(sys.argv[0])
     basedir = os.path.abspath(pathname)
-    # print('full path =', os.path.abspath(pathname))
     # make log folder if not exist:
     log_path = path
     if is_absolute_path is False:
         log_path = os.path.abspath(os.path.join(
             basedir, path))
-    # print('log_path', log_path)
     pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
-    # print(log_path)
     if not os.path.exists(log_path):
         os.makedirs(log_path)
 
@@ -56,15 +53,12 @@ def create_timed_rotating_log(path='./logs', is_absolute_path=False, logger_name
     """
     pathname = os.path.dirname(sys.argv[0])
     basedir = os.path.abspath(pathname)
-    # print('full path =', os.path.abspath(pathname))
     # make log folder if not exist:
     log_path = path
     if is_absolute_path is False:
         log_path = os.path.abspath(os.path.join(
             basedir, path))
-    # print('log_path', log_path)
     pathlib.Path(log_path).mkdir(parents=True, exist_ok=True)
-    # print(log_path)
     if not os.path.exists(log_path):
         os.makedirs(log_path)
 

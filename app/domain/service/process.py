@@ -1,3 +1,4 @@
+import time
 from typing import List
 
 from app.domain.model import Process
@@ -11,7 +12,6 @@ class ProcessService(object):
         self.process_repo = process_repo
 
     def create(self, name: str, description: str = '') -> Process:
-        print('create ', name, description)
         new_process = Process(name=name, description=description)
         new_process.validate()
 
@@ -32,14 +32,16 @@ class ProcessService(object):
         return processes
 
     def update(self, process_id: int, name: str, description: str) -> Process:
-        process = self.process_repo.find_one(process_id)
-        process.name = name
-        process.description = description
+        process = self.find_one(process_id)
+        if name:
+            exist_record = self.process_repo.find_by_name(name)
+            if exist_record:
+                raise error_collection.RecordAlreadyExist(
+                    f'process name ({process.name}) already exist')
+            process.name = name
+        if description:
+            process.description = description
         process.validate()
-
-        exist_record = self.process_repo.find_by_name(process.name)
-        if exist_record:
-            raise error_collection.RecordAlreadyExist('name already exist')
 
         process = self.process_repo.update(process)
         return process

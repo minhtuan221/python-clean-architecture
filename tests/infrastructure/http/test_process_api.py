@@ -1,12 +1,7 @@
 import pytest
 
-from app.cmd.http import app
-from app.domain.model import Process
-from app.infrastructure.factory_bot.user import gen_token_for_normal_user
+from app.infrastructure.factory_bot.setup_test import client
 from app.infrastructure.http.fastapi_adapter.process import process_service
-from app.pkgs.api_client import APIClient
-
-client = APIClient(app, gen_token_for_normal_user())
 
 
 class TestProcessAPI:
@@ -53,12 +48,69 @@ class TestProcessAPI:
     @pytest.mark.run(order=3)
     def test_search_process(self):
         # Make a GET request to the endpoint
-        response = client.get(f"/api/process")
+        response = client.get("/api/process", params={"name": "Test Process"})
 
         # Assert the response status code
         assert response.status_code == 200
 
         # Assert the response JSON data
-        assert "data" in response.json()
-        data = response.json()["data"]
-        assert len(data) == 2
+        data = response.json()
+        assert "data" in data
+        assert "page" in data
+        assert "page_size" in data
+
+        # You can also assert against specific values if needed
+        assert len(data["data"]) == 2
+        assert data["page"] == 1
+        assert data["page_size"] == 10
+
+    @pytest.mark.run(order=4)
+    def test_update_process(self):
+        # Create a test process
+        process = process_service.create(name="Test Process 3", description="Test Description")
+
+        # Make a PUT request to the endpoint
+        response = client.put(f"/api/process/{process.id}", json={"name": "Updated Process", "description": "Updated Description"})
+
+        # Assert the response status code
+        assert response.status_code == 200
+
+        # Assert the response JSON data
+        data = response.json()
+        assert "name" in data
+        assert "description" in data
+        assert "created_at" in data
+        assert "updated_at" in data
+
+        # You can also assert against specific values if needed
+        assert data["name"] == "Updated Process"
+
+        # Make duplicate name return 400
+        response = client.put(f"/api/process/{process.id}", json={"name": "Updated Process",
+                                                                  "description": "Updated Description"})
+        assert response.status_code == 400
+        data = response.json()
+        assert "error" in data
+        assert "data" in data
+
+    @pytest.mark.run(order=5)
+    def test_delete_process(self):
+        # Create a test process
+        process = process_service.create(name="Test Process 4", description="Test Description")
+
+        # Make a DELETE request to the endpoint
+        response = client.delete(f"/api/process/{process.id}")
+
+        # Assert the response status code
+        assert response.status_code == 200
+
+        # Assert the response JSON data
+        data = response.json()
+        assert "name" in data
+        assert "description" in data
+        assert "created_at" in data
+        assert "updated_at" in data
+
+        # You can also assert against specific values if needed
+        assert data["name"] == "Test Process 4"
+        assert data["deleted_at"] is not None

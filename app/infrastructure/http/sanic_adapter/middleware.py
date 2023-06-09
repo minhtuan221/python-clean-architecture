@@ -83,7 +83,6 @@ class Middleware(object):
         if request.method != 'OPTIONS':  # pragma: no cover
             token = self.get_bearer_token(request)
             payload = self.user_service.validate_auth_token(token)
-            # print(payload)
             self.user_service.validate_access_policy(payload['sub'], payload['role_ids'], payload['iat'])
             request.headers['user'] = payload['user']
             request.headers['roles'] = payload['role_ids']
@@ -124,7 +123,6 @@ def set_logger(logger: Logger, app: Sanic):
 
     @app.middleware('response')
     def log_request(request: Request, response: Response):
-        # print(request.headers)
         if 'start' in request.headers: # CORS preflight message do not touch before request middle ware
             start = request.headers['start']
 

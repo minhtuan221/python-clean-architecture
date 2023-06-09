@@ -17,7 +17,6 @@ def match_return(all_required, all_results):
         raise TypeError(
             f'Number of return Argument and required is not match: require {len(all_required)} value, received {len(all_results)} value')
     for requirements, result in zip(all_required, all_results):
-        # print(requirements, result)
         if requirements is None:
             if result is not None:
                 raise TypeError(
@@ -25,7 +24,6 @@ def match_return(all_required, all_results):
                         result, requirements)
                 )
         elif requirements != Any and not check_origin_type(result, requirements):
-            # print(requirements, result)
             raise TypeError(
                 'Return value %r is not of type %s' % (
                     result, requirements)
@@ -34,12 +32,10 @@ def match_return(all_required, all_results):
 
 def validate_input(func, **kwargs):
     hints = get_type_hints(func)
-    # print(hints)
     # get all type of result function
     all_results = func(**kwargs)
     all_results = (all_results,)
 
-    # print('all_results', all_results)
     # iterate all type hints
     for attr_name, attr_type in hints.items():
         if attr_name == 'return':
@@ -77,9 +73,6 @@ def type_check(decorator):
         kwargs.update(dict(zip(func_args, args)))
         # update default value
         func_defaults = [arg for arg in func_args if arg not in kwargs]
-        # print('func_args=', func_args, 'kwargs=', kwargs)
-        # print('func_defaults=', func_defaults,
-        #   'default_kwargs=', default_kwargs)
         kwargs.update(dict(zip(func_defaults, default_kwargs)))
         return validate_input(decorator, **kwargs)
 

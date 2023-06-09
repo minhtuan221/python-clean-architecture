@@ -25,7 +25,6 @@ class ProcessRepository(object):
 
     def find_by_name(self, name: str) -> Optional[Process]:
         with self.db.new_session() as db:
-            print('name', name)
             process: Process = db.session.query(Process).filter_by(name=name).filter(Process.deleted_at == None).first()
         return process
 

@@ -15,6 +15,9 @@ class HttpStatusCode(object):
 
 class Error(Exception):
     """Base class for exceptions in this module."""
+    message: str = ''
+    error_code: int = 0
+    data: dict = None
 
     def __init__(self, message: str = 'there is no error here', error_code=HttpStatusCode.OK, data=None):
         self.message: str = message

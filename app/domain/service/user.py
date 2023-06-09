@@ -193,7 +193,6 @@ class UserService(object):
 
     def validate_access_policy(self, user_id: int, role_ids: List[int], token_iat_int: int):
         checker = self.access_policy_repo.find_for_token_validation(user_id, role_ids)
-        # print(checker.to_json(), time_to_int(checker.denied_before), token_iat_int)
         if checker is None:
             return True
         if time_to_int(checker.denied_before) > token_iat_int:

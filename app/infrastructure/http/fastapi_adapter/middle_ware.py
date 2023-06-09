@@ -110,7 +110,6 @@ class FastAPIMiddleware(object):
         if request.method.upper() != 'OPTIONS':  # pragma: no cover
             token = self.get_bearer_token(request)
             payload = self.user_service.validate_auth_token(token)
-            # print(payload)
             self.user_service.validate_access_policy(payload['sub'], payload['role_ids'], payload['iat'])
             u = UserPayload
             u.user = payload.get('user', None)

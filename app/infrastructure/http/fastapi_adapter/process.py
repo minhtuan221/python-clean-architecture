@@ -46,3 +46,19 @@ async def search_process(request: Request, name: str = '', page: int = 1, page_s
     processes = process_service.search(name, page, page_size)
     # use dict to add more information such as total record
     return dict(data=[p.to_json() for p in processes], page=page, page_size=page_size)
+
+
+@process_api.put('/process/{_id}', tags=['process'], response_model=ProcessResponse)
+@middleware.error_handler
+@middleware.require_permissions()
+async def update_process(request: Request, _id: int, process: ProcessReq):
+    p = process_service.update(_id, process.name, process.description)
+    return p.to_json()
+
+
+@process_api.delete('/process/{_id}', tags=['process'], response_model=ProcessResponse)
+@middleware.error_handler
+@middleware.require_permissions()
+async def delete_process(request: Request, _id: int):
+    p = process_service.delete(_id)
+    return p.to_json()

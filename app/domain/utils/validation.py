@@ -32,8 +32,6 @@ def validate_name_with_space(name: str):
 
 @type_check
 def validate_short_paragraph(paragraph: str):
-    # print('name', name)
-    # print(re.match("^[a-zA-Z0-9_.-]+$", 'admin') is None)
     if len(paragraph) > 500:
         raise errors.Error('Paragraph should not be longer than 500 characters')
     return None

@@ -16,6 +16,7 @@ class EmailAlreadyExist(Error):
 @dataclass
 class RecordNotFound(Error):
     message: str = 'Record not found'
+    error_code: int = HttpStatusCode.Bad_Request
 
 
 @dataclass
