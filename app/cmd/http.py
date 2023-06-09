@@ -3,9 +3,6 @@ from sanic import Sanic
 from fastapi import FastAPI
 
 from app.cmd.center_store import user_role_service, user_service
-from app.config import cli_config
-from app.infrastructure.http.flask_adapter.middleware import set_logger
-from app.infrastructure.http.sanic_adapter import middleware as sanic_utils
 
 
 def create_first_time_config(admin_email, admin_password):
@@ -67,7 +64,7 @@ def create_fastapi_app():
 
     from app.infrastructure.http.fastapi_adapter.admin import admin_api
     from app.infrastructure.http.fastapi_adapter.user import user_api
-    from app.infrastructure.http.fastapi_adapter.process import process_api
+    from app.infrastructure.http.fastapi_adapter.process_maker.process import process_api
 
     fast_app.include_router(admin_api, prefix='/api')
     fast_app.include_router(user_api, prefix='/api')

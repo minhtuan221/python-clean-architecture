@@ -1,11 +1,9 @@
-from typing import List
-
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
 from app.cmd import center_store
-from app.domain.service.process import ProcessService
-from .middle_ware import FastAPIMiddleware
+from app.domain.service.process_maker.process import ProcessService
+from app.infrastructure.http.fastapi_adapter.middle_ware import FastAPIMiddleware
 
 process_api = APIRouter()
 middleware = center_store.container.get_singleton(FastAPIMiddleware)

@@ -1,7 +1,7 @@
 import pytest
 
 from app.infrastructure.factory_bot.setup_test import client
-from app.infrastructure.http.fastapi_adapter.process import process_service
+from app.infrastructure.http.fastapi_adapter.process_maker.process import process_service
 
 
 class TestProcessAPI:
