@@ -7,7 +7,7 @@ from app.infrastructure.http.flask_adapter.middleware import Middleware
 from app.infrastructure.http.sanic_adapter import middleware as sanic_utils
 from app.infrastructure.persistence.access_policy import AccessPolicyRepository
 from app.infrastructure.persistence.blacklist_token import BlacklistTokenRepository
-from app.infrastructure.persistence.process import ProcessRepository
+from app.infrastructure.persistence.process_maker.process import ProcessRepository
 from app.infrastructure.persistence.role import RoleRepository
 from app.infrastructure.persistence.user import UserRepository
 from app.pkgs.injector import Container
