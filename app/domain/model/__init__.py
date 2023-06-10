@@ -12,7 +12,14 @@ from app.domain.model.user import User, UserRole
 from app.domain.model.role import Role, PermissionPolicy
 from app.domain.model.blacklist_token import BlacklistToken
 from app.domain.model.access_policy import AccessPolicy
-from app.domain.model.process_maker.process import Process
+from app.domain.model.group import Group, GroupMember
+from app.domain.model.process_maker.process import Process, ProcessAdmin
+from app.domain.model.process_maker.target import Target
+from app.domain.model.process_maker.action import Action, ActionTarget
+from app.domain.model.process_maker.activity import Activity, ActivityTarget
+from app.domain.model.process_maker.state import State, StateActivity
+from app.domain.model.process_maker.route import Route, RouteActivity, RouteAction
+from app.domain.model.process_maker.request import Request, RequestNote, RequestStakeholder, RequestData, RequestAction
 
 
 class ConnectionPool(object):

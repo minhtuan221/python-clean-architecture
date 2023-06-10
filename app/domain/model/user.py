@@ -21,6 +21,7 @@ class User(Base, Serializable):
     is_confirmed: bool = Column(Boolean, default=False)
 
     roles: List[Role] = relationship("Role", secondary='user_role', backref="user", lazy='dynamic')
+    request = relationship("Request", back_populates="user")
 
     def to_json(self) -> dict:
         json_data = super().to_json()  # Call the to_json method of the base class

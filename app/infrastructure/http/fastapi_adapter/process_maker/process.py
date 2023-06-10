@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
@@ -21,6 +23,12 @@ class ProcessResponse(ProcessReq):
     deleted_at: str = None
 
 
+class ListProcessResponse(BaseModel):
+    data: List[ProcessResponse]
+    page: int
+    page_size: int
+
+
 @process_api.post('/process', tags=['process'], response_model=ProcessResponse)
 @middleware.error_handler
 @middleware.require_permissions()
@@ -37,7 +45,7 @@ async def find_one_process(request: Request, _id: int):
     return p.to_json()
 
 
-@process_api.get('/process', tags=['process'], response_model=ProcessResponse)
+@process_api.get('/process', tags=['process'], response_model=ListProcessResponse)
 @middleware.error_handler
 @middleware.require_permissions()
 async def search_process(request: Request, name: str = '', page: int = 1, page_size: int = 10):
