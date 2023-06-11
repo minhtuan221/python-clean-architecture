@@ -23,6 +23,14 @@ class RouteRepository(object):
                 id=route_id).first()
         return route
 
+    def find_by_parent(self, process_id: int, route_id: int) -> Optional[Route]:
+        with self.db.new_session() as db:
+            route: Route = db.session.query(Route)\
+                .filter(Route.id==route_id)\
+                .filter(Route.process_id==process_id)\
+                .first()
+        return route
+
     def search(self, page: int = 1, page_size: int = 20) -> List[Route]:
         limit, offset = get_limit_offset(page, page_size)
         with self.db.new_session() as db:

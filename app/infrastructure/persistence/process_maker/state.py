@@ -23,6 +23,14 @@ class StateRepository(object):
                 id=state_id).filter(State.deleted_at == None).first()
         return state
 
+    def find_by_parent(self, process_id: int, state_id: int) -> Optional[State]:
+        with self.db.new_session() as db:
+            state: State = db.session.query(State) \
+                .filter(State.process_id == process_id) \
+                .filter(State.id == state_id) \
+                .filter(State.deleted_at == None).first()
+        return state
+
     def search(self, name: str = '', page: int = 1, page_size: int = 20) -> List[State]:
         limit, offset = get_limit_offset(page, page_size)
         with self.db.new_session() as db:

@@ -1,10 +1,13 @@
 import requests
 from fastapi.testclient import TestClient
 
+from app.cmd.http import app
+from app.infrastructure.factory_bot.user import get_token_for_normal_user
+
 
 class APIClient:
-    def __init__(self, app, token):
-        self.client = TestClient(app)
+    def __init__(self, _app, token):
+        self.client = TestClient(_app)
         self.token = token
 
     def _make_request(self, method, url, **kwargs) -> requests.Response:
@@ -27,3 +30,6 @@ class APIClient:
 
     def delete(self, url, **kwargs):
         return self._make_request("delete", url, **kwargs)
+
+
+client = APIClient(app, get_token_for_normal_user())

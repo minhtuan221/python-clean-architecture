@@ -9,6 +9,10 @@ class Serializable:
     updated_at: datetime.datetime = Column(DateTime, index=True, default=datetime.datetime.utcnow)
     deleted_at: Optional[datetime.datetime] = Column(DateTime, index=True)
 
+    def validate(self):
+        # add validation here
+        pass
+
     def to_json(self) -> dict:
         json_data = {}
         for key, value in self.__dict__.items():

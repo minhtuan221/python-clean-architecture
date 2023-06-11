@@ -1,3 +1,6 @@
+from logging import Logger
+
+from app.config import cli_config
 from app.domain.model import ConnectionPool
 from app.domain.service.process_maker.process import ProcessService
 from app.domain.service.user import UserService
@@ -7,14 +10,16 @@ from app.infrastructure.http.flask_adapter.middleware import Middleware
 from app.infrastructure.http.sanic_adapter import middleware as sanic_utils
 from app.infrastructure.persistence.access_policy import AccessPolicyRepository
 from app.infrastructure.persistence.blacklist_token import BlacklistTokenRepository
+from app.infrastructure.persistence.process_maker.action import ActionRepository
+from app.infrastructure.persistence.process_maker.activity import ActivityRepository
 from app.infrastructure.persistence.process_maker.process import ProcessRepository
+from app.infrastructure.persistence.process_maker.request import RequestRepository
+from app.infrastructure.persistence.process_maker.route import RouteRepository
+from app.infrastructure.persistence.process_maker.state import StateRepository
 from app.infrastructure.persistence.role import RoleRepository
 from app.infrastructure.persistence.user import UserRepository
 from app.pkgs.injector import Container
 from app.pkgs.logger import set_gunicorn_custom_logger
-from logging import Logger
-from app.config import cli_config
-
 
 container = Container()
 container.add_instance(cli_config)
@@ -36,6 +41,11 @@ container.add_singleton(UserService)
 container.add_singleton(Middleware)
 container.add_singleton(FastAPIMiddleware)
 container.add_singleton(ProcessRepository)
+container.add_singleton(ActivityRepository)
+container.add_singleton(ActionRepository)
+container.add_singleton(RequestRepository)
+container.add_singleton(RouteRepository)
+container.add_singleton(StateRepository)
 container.add_singleton(ProcessService)
 container.build()
 

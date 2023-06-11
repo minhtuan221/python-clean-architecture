@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import List, Optional
 
+from sqlalchemy.orm import joinedload
+
 from app.domain.model import ConnectionPool
 from app.domain.model import Process
 from app.domain.utils.db_helper import get_limit_offset
@@ -21,6 +23,14 @@ class ProcessRepository(object):
         with self.db.new_session() as db:
             process: Process = db.session.query(Process).filter_by(
                 id=process_id).filter(Process.deleted_at == None).first()
+        return process
+
+    def get_children_by_process_id(self, process_id: int) -> Optional[Process]:
+        with self.db.new_session() as db:
+            process: Process = db.session.query(Process).filter_by(id=process_id). \
+                options(joinedload(Process.state),
+                        joinedload(Process.route)). \
+                first()
         return process
 
     def find_by_name(self, name: str) -> Optional[Process]:
