@@ -17,6 +17,8 @@ class Process(Base, Serializable):
     route = relationship("Route", back_populates="process")
     request = relationship("Request", back_populates="process")
 
+    _json_black_list = ['request']
+
     def validate(self):
         self.name = self.name.strip()
         self.description = self.description.strip()

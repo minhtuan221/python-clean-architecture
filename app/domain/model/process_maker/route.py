@@ -20,6 +20,8 @@ class Route(Base, Serializable):
     action = relationship("Action", secondary='route_action', back_populates="route")
     activity = relationship("Activity", secondary='route_activity', back_populates="route")
 
+    _json_black_list = ['process', 'current_state']
+
 
 class RouteAction(Base, Serializable):
     __tablename__ = 'route_action'

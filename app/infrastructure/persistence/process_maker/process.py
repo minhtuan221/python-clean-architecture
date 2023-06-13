@@ -28,9 +28,9 @@ class ProcessRepository(object):
     def get_children_by_process_id(self, process_id: int) -> Optional[Process]:
         with self.db.new_session() as db:
             process: Process = db.session.query(Process).filter_by(id=process_id). \
-                options(joinedload(Process.state),
-                        joinedload(Process.route)). \
                 first()
+            for s in process.state:
+                s.route
         return process
 
     def find_by_name(self, name: str) -> Optional[Process]:

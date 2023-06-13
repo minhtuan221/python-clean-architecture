@@ -19,6 +19,8 @@ class Action(Base, Serializable):
     route = relationship("Route", secondary='route_action', back_populates="action")
     target = relationship("Target", secondary='action_target', back_populates="action")
 
+    _json_black_list = ['route']
+
 
 class ActionTarget(Base, Serializable):
     __tablename__ = 'action_target'

@@ -1,4 +1,5 @@
 import datetime
+from dataclasses import dataclass
 from typing import Optional
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
@@ -6,6 +7,12 @@ from sqlalchemy.orm import relationship
 from app.domain.model import Base
 from app.domain.model._serializable import Serializable
 from app.domain.utils import validation
+
+
+@dataclass
+class TargetType:
+    group = 'group'
+    user = 'user'
 
 
 class Target(Base, Serializable):

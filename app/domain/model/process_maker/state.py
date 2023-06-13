@@ -20,6 +20,8 @@ class State(Base, Serializable):
     route = relationship("Route", back_populates="current_state")
     activity = relationship("Activity", secondary='state_activity', back_populates="state")
 
+    _json_black_list = ['process']
+
 
 class StateActivity(Base, Serializable):
     __tablename__ = 'state_activity'

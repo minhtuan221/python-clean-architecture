@@ -29,11 +29,18 @@ class ActivityRepository(object):
                 name=name).first()
         return activity
 
-    def search(self, page: int = 1, page_size: int = 20) -> List[Activity]:
+    def search(self, name: str = '', page: int = 1, page_size: int = 20) -> List[Activity]:
         limit, offset = get_limit_offset(page, page_size)
         with self.db.new_session() as db:
-            activities: List[Activity] = db.session.query(Activity).offset(offset).limit(limit).all()
-        return activities
+            query = db.session.query(Activity) \
+                .filter(Activity.deleted_at == None) \
+                .order_by(Activity.updated_at.desc())
+
+            if name:
+                query = query.filter(Activity.name.like(f"%{name}%"))
+
+            activites: List[Activity] = query.offset(offset).limit(limit).all()
+        return activites
 
     def update(self, activity: Activity) -> Activity:
         with self.db.new_session() as db:

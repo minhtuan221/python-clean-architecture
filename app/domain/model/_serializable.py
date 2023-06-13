@@ -1,5 +1,5 @@
 import datetime
-from typing import Optional
+from typing import Optional, List
 
 from sqlalchemy import Column, DateTime
 
@@ -8,6 +8,7 @@ class Serializable:
     created_at: datetime.datetime = Column(DateTime, index=True, default=datetime.datetime.utcnow)
     updated_at: datetime.datetime = Column(DateTime, index=True, default=datetime.datetime.utcnow)
     deleted_at: Optional[datetime.datetime] = Column(DateTime, index=True)
+    _json_black_list: List[str] = []
 
     def validate(self):
         # add validation here
@@ -16,11 +17,13 @@ class Serializable:
     def to_json(self) -> dict:
         json_data = {}
         for key, value in self.__dict__.items():
-            if not key.startswith('_'):
+            if not key.startswith('_') and key not in self._json_black_list:
                 if isinstance(value, (datetime.datetime, datetime.date)):
                     json_data[key] = value.isoformat()
+                elif isinstance(value, list):
+                    json_data[key] = [v.to_json() if hasattr(v, 'to_json') else v for v in value]
                 else:
-                    json_data[key] = value
+                    json_data[key] = value.to_json() if hasattr(value, 'to_json') else value
         return json_data
 
     def to_dict(self) -> dict:

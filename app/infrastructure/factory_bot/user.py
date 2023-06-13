@@ -1,7 +1,7 @@
 from app.cmd.center_store import container
 from app.domain.model import User
 from app.domain.service.user import UserService
-from app.infrastructure.factory_bot.setup_test import cache
+from app.pkgs.cache_tools import cache
 
 
 @cache()
