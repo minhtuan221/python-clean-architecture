@@ -45,6 +45,12 @@ class ProcessService(object):
             raise error_collection.RecordNotFound
         return process
 
+    def find_one_by_name(self, name: str) -> Process:
+        process = self.process_repo.find_by_name(name)
+        if not process:
+            raise error_collection.RecordNotFound
+        return process
+
     def search(self, name: str, page: int = 1, page_size: int = 10) -> List[Process]:
         processes = self.process_repo.search(name, page, page_size)
         return processes
@@ -86,6 +92,12 @@ class ProcessService(object):
             raise error_collection.RecordNotFound(f'cannot find state_id ({state_id})')
         return state
 
+    def find_state_on_process_by_name(self, process_id: int, name: str) -> State:
+        state = self.state_repo.find_by_name_and_parent(process_id, name)
+        if not state:
+            raise error_collection.RecordNotFound(f'cannot find state name ({name})')
+        return state
+
     def update_state_on_process(self, process_id: int, state_id: int, name: str = '',
                                 description: str = '',
                                 state_type: str = ''):
@@ -124,10 +136,10 @@ class ProcessService(object):
     def add_route_to_process(self, process_id: int, current_state_id: int,
                              next_state_id: int = 0) -> Route:
         current_state = self.find_state_on_process(process_id, current_state_id)
-        next_state = self.find_state_on_process(process_id, next_state_id)
         route = Route(process_id=process_id)
         route.current_state = current_state
         if next_state_id:
+            next_state = self.find_state_on_process(process_id, next_state_id)
             route.next_state_id = next_state.id
         route.validate()
         return self.route_repo.create(route)

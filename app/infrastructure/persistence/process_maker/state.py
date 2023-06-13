@@ -23,6 +23,14 @@ class StateRepository(object):
                 id=state_id).filter(State.deleted_at == None).first()
         return state
 
+    def find_by_name_and_parent(self,  process_id: int, name: str) -> Optional[State]:
+        with self.db.new_session() as db:
+            state: State = db.session.query(State) \
+                .filter(State.process_id == process_id) \
+                .filter(State.name == name) \
+                .filter(State.deleted_at == None).first()
+        return state
+
     def find_by_parent(self, process_id: int, state_id: int) -> Optional[State]:
         with self.db.new_session() as db:
             state: State = db.session.query(State) \

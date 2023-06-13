@@ -34,6 +34,12 @@ class ActionService(object):
             raise error_collection.RecordNotFound
         return action
 
+    def find_one_by_name(self, name: str) -> Action:
+        action = self.action_repo.find_by_name(name)
+        if not action:
+            raise error_collection.RecordNotFound
+        return action
+
     def search(self, name: str, page: int = 1, page_size: int = 10) -> List[Action]:
         actions = self.action_repo.search(name, page, page_size)
         return actions

@@ -1,11 +1,8 @@
-import datetime
-from typing import Optional
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
+from sqlalchemy import Column, String, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.domain.model import Base
 from app.domain.model._serializable import Serializable
-from app.domain.utils import validation
 
 
 class Action(Base, Serializable):

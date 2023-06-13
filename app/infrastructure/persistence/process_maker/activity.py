@@ -28,6 +28,13 @@ class ActivityRepository(object):
             activity: Activity = db.session.query(Activity).filter_by(
                 name=name).first()
         return activity
+    
+    def get_children_by_id(self, activity_id: int) -> Optional[Activity]:
+        with self.db.new_session() as db:
+            activity: Activity = db.session.query(Activity).filter_by(id=activity_id). \
+                first()
+            activity.target
+        return activity
 
     def search(self, name: str = '', page: int = 1, page_size: int = 20) -> List[Activity]:
         limit, offset = get_limit_offset(page, page_size)

@@ -13,7 +13,7 @@ class Route(Base, Serializable):
     id: int = Column(Integer, primary_key=True)
     process_id: int = Column(Integer, ForeignKey('process.id'))
     current_state_id: int = Column(Integer, ForeignKey('state.id'))
-    next_state_id: int = Column(Integer)  # can be null if the action with it does not link to any state
+    next_state_id: int = Column(Integer)  # can be null or 0 if the action with it does not link to any state
 
     process = relationship("Process", back_populates="route")
     current_state = relationship("State", foreign_keys=[current_state_id], back_populates="route")

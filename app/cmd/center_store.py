@@ -2,6 +2,7 @@ from logging import Logger
 
 from app.config import cli_config
 from app.domain.model import ConnectionPool
+from app.domain.service.group_service import GroupService
 from app.domain.service.process_maker.action_service import ActionService
 from app.domain.service.process_maker.activity_service import ActivityService
 from app.domain.service.process_maker.process_service import ProcessService
@@ -13,6 +14,7 @@ from app.infrastructure.http.flask_adapter.middleware import Middleware
 from app.infrastructure.http.sanic_adapter import middleware as sanic_utils
 from app.infrastructure.persistence.access_policy import AccessPolicyRepository
 from app.infrastructure.persistence.blacklist_token import BlacklistTokenRepository
+from app.infrastructure.persistence.group import GroupRepository
 from app.infrastructure.persistence.process_maker.action import ActionRepository
 from app.infrastructure.persistence.process_maker.activity import ActivityRepository
 from app.infrastructure.persistence.process_maker.process import ProcessRepository
@@ -43,6 +45,7 @@ container.add_singleton(RoleRepository)
 container.add_singleton(AccessPolicyRepository)
 container.add_singleton(BlacklistTokenRepository)
 container.add_singleton(UserRoleService)
+container.add_singleton(GroupRepository)
 container.add_singleton(UserService)
 container.add_singleton(Middleware)
 container.add_singleton(FastAPIMiddleware)
@@ -57,6 +60,7 @@ container.add_singleton(ProcessService)
 container.add_singleton(ActionService)
 container.add_singleton(ActivityService)
 container.add_singleton(TargetService)
+container.add_singleton(GroupService)
 container.build()
 
 user_role_service = container.get_singleton(UserRoleService)

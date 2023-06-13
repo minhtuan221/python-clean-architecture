@@ -24,13 +24,13 @@ class ActionRepository(object):
             action: Action = db.session.query(Action).filter_by(
                 id=action_id).first()
         return action
-    
+
     def get_children_by_id(self, action_id: int) -> Optional[Action]:
         with self.db.new_session() as db:
-            process: Action = db.session.query(Action).filter_by(id=action_id). \
-                options(joinedload(Action.target)). \
+            action: Action = db.session.query(Action).filter_by(id=action_id). \
                 first()
-        return process
+            action.target
+        return action
 
     def find_by_name(self, name: str) -> Optional[Action]:
         with self.db.new_session() as db:

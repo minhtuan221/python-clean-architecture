@@ -65,7 +65,7 @@ class TestProcessMakerService:
         assert states[1]['route'][1] == route_approve_to_denied.to_json()
         assert states[1]['route'][2] == route_approve_to_start.to_json()
 
-        pprint(test_process.to_json())
+        # pprint(test_process.to_json())
 
 
 
