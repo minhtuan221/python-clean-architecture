@@ -70,3 +70,19 @@ async def update_activity(request: Request, activity_id: int, activity: Activity
 async def delete_activity(request: Request, activity_id: int):
     a = activity_service.delete(activity_id)
     return a.to_json()
+
+
+@activity_api.post('/activity/{activity_id}/target/{target_id}', tags=['activity'], response_model=ActivityResponse)
+@middleware.error_handler
+@middleware.require_permissions()
+async def add_target_to_activity(request: Request, activity_id: int, target_id: int):
+    p = activity_service.add_target_to_activity(activity_id, target_id)
+    return p.to_json()
+
+
+@activity_api.delete('/activity/{activity_id}/target/{target_id}', tags=['activity'], response_model=ActivityResponse)
+@middleware.error_handler
+@middleware.require_permissions()
+async def remove_target_from_activity(request: Request, activity_id: int, target_id: int):
+    p = activity_service.remove_target_from_activity(activity_id, target_id)
+    return p.to_json()

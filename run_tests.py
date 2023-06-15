@@ -14,10 +14,10 @@ test_cases = [
     TestContainer,
     TestUserRoleService,
     TestUserService,
-    TestActionAPI,
-    TestProcessAPI,
-    TestActivityAPI,
+    TestProcessMakerService,
     TestGroupAPI,
     TestTargetAPI,
-    TestProcessMakerService
+    TestActionAPI,
+    TestActivityAPI,
+    TestProcessAPI,
 ]

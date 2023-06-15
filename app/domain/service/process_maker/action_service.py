@@ -66,4 +66,32 @@ class ActionService(object):
         action = self.action_repo.delete(action_id)
         return action
 
+    def add_target_to_action(self, action_id: int, target_id: int) -> Action:
+        action = self.find_one(action_id)
+        target = self.target_repo.find_one(target_id)
+
+        if not action:
+            raise error_collection.RecordNotFound(f'Cannot find action with id ({action_id})')
+        if not target:
+            raise error_collection.RecordNotFound(f'Cannot find target with id ({target_id})')
+
+        action.target.append(target)
+        self.action_repo.update(action)
+
+        return action
+
+    def remove_target_from_action(self, action_id: int, target_id: int) -> Action:
+        action = self.find_one(action_id)
+        target = self.target_repo.find_one(target_id)
+
+        if not action:
+            raise error_collection.RecordNotFound(f'Cannot find action with id ({action_id})')
+        if not target:
+            raise error_collection.RecordNotFound(f'Cannot find target with id ({target_id})')
+
+        action.target.remove(target)
+        self.action_repo.update(action)
+
+        return action
+
 

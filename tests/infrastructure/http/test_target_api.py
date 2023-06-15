@@ -1,13 +1,14 @@
 import pytest
 
 from app.domain.model.process_maker.target import TargetType
+from app.infrastructure.http.fastapi_adapter.group import group_service
 from app.infrastructure.http.fastapi_adapter.process_maker.target import target_service
 from app.pkgs.api_client import client
 
 
 class TestTargetAPI:
 
-    @pytest.mark.run(order=21)
+    @pytest.mark.run(order=11)
     def test_create_new_target(self):
         print('\ntest target API')
         # Make a POST request to the endpoint
@@ -28,7 +29,7 @@ class TestTargetAPI:
         # You can also assert against specific values if needed
         assert data["name"] == "Test Target"
 
-    @pytest.mark.run(order=22)
+    @pytest.mark.run(order=12)
     def test_find_one_target(self):
         # find the target in previous test
         target = target_service.find_one_by_name("Test Target")
@@ -49,7 +50,7 @@ class TestTargetAPI:
         # You can also assert against specific values if needed
         assert data["name"] == "Test Target"
 
-    @pytest.mark.run(order=23)
+    @pytest.mark.run(order=13)
     def test_search_target(self):
         # let make some other target to make this test more sense, also inherit the target created from previous test
         client.post("/api/target",
@@ -79,16 +80,16 @@ class TestTargetAPI:
         assert data["page"] == 1
         assert data["page_size"] == 10
 
-    @pytest.mark.run(order=24)
+    @pytest.mark.run(order=14)
     def test_update_target(self):
         # find the target in previous test
         target = target_service.find_one_by_name("Test Target 2")
 
         # Make a PUT request to the endpoint
         response = client.put(f"/api/target/{target.id}", json={"name": "Updated Target",
-                                                               "description": "Updated Description",
-                                                               "target_type": TargetType.group,
-                                                               "group_id": 1})
+                                                                "description": "Updated Description",
+                                                                "target_type": TargetType.group,
+                                                                "group_id": 1})
 
         # Assert the response status code
         assert response.status_code == 200
@@ -105,15 +106,15 @@ class TestTargetAPI:
 
         # Make duplicate name return 400
         response = client.put(f"/api/target/{target.id}", json={"name": "Updated Target",
-                                                               "description": "Updated Description",
-                                                               "target_type": TargetType.group,
-                                                               "group_id": 1})
+                                                                "description": "Updated Description",
+                                                                "target_type": TargetType.group,
+                                                                "group_id": 1})
         assert response.status_code == 400
         data = response.json()
         assert "error" in data
         assert "data" in data
 
-    @pytest.mark.run(order=25)
+    @pytest.mark.run(order=15)
     def test_delete_target(self):
         # create a target to delete
         response = client.post("/api/target",
@@ -137,3 +138,16 @@ class TestTargetAPI:
         # You can also assert against specific values if needed
         assert data["name"] == "deleted target"
         assert data["deleted_at"] is not None
+
+    @pytest.mark.run(order=16)
+    def test_create_target_for_process(self):
+        staff_group = group_service.find_one_by_name("staff group")
+        leader_group = group_service.find_one_by_name("leader group")
+        response = client.post("/api/target",
+                               json={"name": "staff group", "description": "Test Description",
+                                     "target_type": TargetType.group, "group_id": staff_group.id})
+        assert response.status_code == 200
+        response = client.post("/api/target",
+                               json={"name": "leader group", "description": "Test Description",
+                                     "target_type": TargetType.group, "group_id": leader_group.id})
+        assert response.status_code == 200

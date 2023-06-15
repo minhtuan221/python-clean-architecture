@@ -10,6 +10,8 @@ class ActionType:
     Restart: The actioner suggesting that the request be moved back to the Start state in the process.
     Resolve: The actioner is suggesting that the request be moved all the way to the Completed state."""
     start: str = 'start'  # the request is just sent to approval
+    edit: str = 'edit'  # change request information
+    send: str = 'send'   # send request to review by leader/approval
     approve: str = 'approve'  # done by approval, the request cannot be change anymore
     cancel: str = 'cancel'  # done by requester, who send the request
     reject: str = 'reject'  # return to requester but can be change and re-submit

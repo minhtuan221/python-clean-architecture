@@ -71,3 +71,19 @@ async def update_action(request: Request, action_id: int, action: ActionReq):
 async def delete_action(request: Request, action_id: int):
     p = action_service.delete(action_id)
     return p.to_json()
+
+
+@action_api.post('/action/{action_id}/target/{target_id}', tags=['action'], response_model=ActionResponse)
+@middleware.error_handler
+@middleware.require_permissions()
+async def add_target_to_action(request: Request, action_id: int, target_id: int):
+    p = action_service.add_target_to_action(action_id, target_id)
+    return p.to_json()
+
+
+@action_api.delete('/action/{action_id}/target/{target_id}', tags=['action'], response_model=ActionResponse)
+@middleware.error_handler
+@middleware.require_permissions()
+async def remove_target_from_action(request: Request, action_id: int, target_id: int):
+    p = action_service.remove_target_from_action(action_id, target_id)
+    return p.to_json()

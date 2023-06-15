@@ -1,13 +1,16 @@
 import pytest
 
 from app.domain.model.process_maker.activity_type import ActivityType
+from app.infrastructure.http.fastapi_adapter.process_maker.target import target_service
 from app.pkgs.api_client import client
 from app.infrastructure.http.fastapi_adapter.process_maker.activity import activity_service
+
+test_order = 20
 
 
 class TestActivityAPI:
 
-    @pytest.mark.run(order=11)
+    @pytest.mark.run(order=test_order+1)
     def test_create_new_activity(self):
         print('\ntest activity API')
         # Make a POST request to the endpoint
@@ -31,7 +34,7 @@ class TestActivityAPI:
         assert data["description"] == "Test Description"
         assert data["activity_type"] == ActivityType.add_note
 
-    @pytest.mark.run(order=12)
+    @pytest.mark.run(order=test_order+2)
     def test_find_one_activity(self):
         # find the activity in the previous test
         activity = activity_service.find_one_by_name("Test Activity")
@@ -55,7 +58,7 @@ class TestActivityAPI:
         assert data["description"] == "Test Description"
         assert data["activity_type"] == ActivityType.add_note
 
-    @pytest.mark.run(order=13)
+    @pytest.mark.run(order=test_order+3)
     def test_search_activity(self):
         # let's make some other activities to make this test more meaningful,
         # also inherit the activity created from the previous test
@@ -86,7 +89,7 @@ class TestActivityAPI:
         assert data["page"] == 1
         assert data["page_size"] == 10
 
-    @pytest.mark.run(order=14)
+    @pytest.mark.run(order=test_order+4)
     def test_update_activity(self):
         # find the activity in the previous test
         activity = activity_service.find_one_by_name("Test Activity 2")
@@ -121,7 +124,7 @@ class TestActivityAPI:
         assert "error" in data
         assert "data" in data
 
-    @pytest.mark.run(order=15)
+    @pytest.mark.run(order=test_order+5)
     def test_delete_activity(self):
         # create an activity to delete
         response = client.post("/api/activity",
@@ -148,3 +151,34 @@ class TestActivityAPI:
         assert data["description"] == "Test Description"
         assert data["activity_type"] == ActivityType.send_email
         assert data["deleted_at"] is not None
+
+    @pytest.mark.run(order=test_order + 6)
+    def test_create_activity_for_process(self):
+        response = client.post("/api/activity",
+                               json={"name": "add note when edit",
+                                     "description": "add note if change request information",
+                                     "activity_type": ActivityType.add_note})
+        assert response.status_code == 200
+        add_note_when_edit = activity_service.find_one(response.json()['id'])
+        response = client.post("/api/activity",
+                               json={"name": "send email leader",
+                                     "description": "send email notify leader",
+                                     "activity_type": ActivityType.send_email})
+        assert response.status_code == 200
+        send_email_leader = activity_service.find_one(response.json()['id'])
+        response = client.post("/api/activity",
+                               json={"name": "send email staff",
+                                     "description": "send email notify staff",
+                                     "activity_type": ActivityType.send_email})
+        assert response.status_code == 200
+        send_email_staff = activity_service.find_one(response.json()['id'])
+
+        # add target to activity
+        staff_group = target_service.find_one_by_name('staff group')
+        leader_group = target_service.find_one_by_name('leader group')
+        response = client.post(f"/api/activity/{add_note_when_edit.id}/target/{staff_group.id}")
+        assert response.status_code == 200
+        response = client.post(f"/api/activity/{send_email_staff.id}/target/{staff_group.id}")
+        assert response.status_code == 200
+        response = client.post(f"/api/activity/{send_email_leader.id}/target/{leader_group.id}")
+        assert response.status_code == 200

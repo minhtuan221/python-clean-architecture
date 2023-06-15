@@ -36,10 +36,10 @@ class ActivityService(object):
         return activity
 
     def find_one_by_name(self, name: str) -> Activity:
-        action = self.activity_repo.find_by_name(name)
-        if not action:
+        activity = self.activity_repo.find_by_name(name)
+        if not activity:
             raise error_collection.RecordNotFound
-        return action
+        return activity
 
     def search(self, name: str, page: int = 1, page_size: int = 10) -> List[Activity]:
         activities = self.activity_repo.search(name, page, page_size)
@@ -65,4 +65,32 @@ class ActivityService(object):
 
     def delete(self, activity_id: int):
         activity = self.activity_repo.delete(activity_id)
+        return activity
+    
+    def add_target_to_activity(self, activity_id: int, target_id: int) -> Activity:
+        activity = self.find_one(activity_id)
+        target = self.target_repo.find_one(target_id)
+
+        if not activity:
+            raise error_collection.RecordNotFound(f'Cannot find activity with id ({activity_id})')
+        if not target:
+            raise error_collection.RecordNotFound(f'Cannot find target with id ({target_id})')
+
+        activity.target.append(target)
+        self.activity_repo.update(activity)
+
+        return activity
+
+    def remove_target_from_activity(self, activity_id: int, target_id: int) -> Activity:
+        activity = self.find_one(activity_id)
+        target = self.target_repo.find_one(target_id)
+
+        if not activity:
+            raise error_collection.RecordNotFound(f'Cannot find activity with id ({activity_id})')
+        if not target:
+            raise error_collection.RecordNotFound(f'Cannot find target with id ({target_id})')
+
+        activity.target.remove(target)
+        self.activity_repo.update(activity)
+
         return activity
