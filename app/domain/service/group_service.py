@@ -1,14 +1,16 @@
 from typing import List, Optional
 
-from app.domain.model import Group
+from app.domain.model import Group, GroupMember
 from app.domain.utils import error_collection, validation
 from app.infrastructure.persistence.group import GroupRepository
+from app.infrastructure.persistence.user import UserRepository
 
 
 class GroupService(object):
 
-    def __init__(self, group_repo: GroupRepository):
+    def __init__(self, group_repo: GroupRepository, user_repo: UserRepository):
         self.group_repo = group_repo
+        self.user_repo = user_repo
 
     def create(self, name: str, description: str = '') -> Group:
         new_group = Group(name=name, description=description)
@@ -51,5 +53,34 @@ class GroupService(object):
         return group
 
     def delete(self, group_id: int):
+        validation.validate_id(group_id)
         group = self.group_repo.delete(group_id)
         return group
+
+    def add_user_to_group(self, group_id: int, user_id: int) -> Group:
+        group = self.group_repo.find_one(group_id)
+        if not group:
+            raise error_collection.RecordNotFound(f'cannot find group_id ({group_id})')
+
+        user = self.user_repo.find(user_id)
+        if not user:
+            raise error_collection.RecordNotFound(f'cannot find user_id ({user_id})')
+
+        group.member.append(user)
+
+        # Update the group in the repository
+        return self.group_repo.update(group)
+
+    def remove_user_from_group(self, group_id: int, user_id: int) -> Group:
+        group = self.group_repo.find_one(group_id)
+        if not group:
+            raise error_collection.RecordNotFound(f'cannot find group_id ({group_id})')
+
+        user = self.user_repo.find(user_id)
+        if not user:
+            raise error_collection.RecordNotFound(f'cannot find user_id ({user_id})')
+
+        group.member.remove(user)
+
+        # Update the group in the repository
+        return self.group_repo.update(group)

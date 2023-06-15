@@ -68,3 +68,21 @@ async def update_group(request: Request, group_id: int, group: GroupReq):
 async def delete_group(request: Request, group_id: int):
     p = group_service.delete(group_id)
     return p.to_json()
+
+
+@group_api.post('/group/{group_id}/member/{member_id}', tags=['group'],
+                response_model=GroupResponse)
+@middleware.error_handler
+@middleware.require_permissions()
+async def add_member_to_group(request: Request, group_id: int, member_id: int):
+    member = group_service.add_user_to_group(group_id, member_id)
+    return member.to_json()
+
+
+@group_api.delete('/group/{group_id}/member/{member_id}', tags=['group'],
+                  response_model=GroupResponse)
+@middleware.error_handler
+@middleware.require_permissions()
+async def remove_member_from_group(request: Request, group_id: int, member_id: int):
+    member = group_service.remove_user_from_group(group_id, member_id)
+    return member.to_json()

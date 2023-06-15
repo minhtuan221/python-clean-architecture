@@ -10,8 +10,9 @@ def read_config(file_name: str = "config.json") -> dict:
 
 development_key = 'dev'
 production_key = 'prod'
-private_key_file = './private.pem'
-public_key_file = './public.pem'
+project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+private_key_file = f'{project_dir}/private.pem'
+public_key_file = f'{project_dir}/public.pem'
 
 
 class Config(object):

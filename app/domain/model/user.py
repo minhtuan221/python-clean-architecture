@@ -22,7 +22,10 @@ class User(Base, Serializable):
 
     roles: List[Role] = relationship("Role", secondary='user_role', backref="user", lazy='dynamic')
     request = relationship("Request", back_populates="user")
+    group = relationship("Group", secondary='group_member', back_populates="member")
     token: str = ''
+
+    _json_black_list: List[str] = ['password']
 
     def to_json(self) -> dict:
         json_data = super().to_json()  # Call the to_json method of the base class

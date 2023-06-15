@@ -54,7 +54,7 @@ class UserRepository(object):
     def find_by_email(self, email: str) -> User:
         with self.db.new_session() as db:
             user: User = db.session.query(User).filter_by(
-                email=email).filter(User.deleted_at == None).order_by(User.updated_at.desc()).all()
+                email=email).filter(User.deleted_at == None).first()
         return user
 
     def count_by_email(self, email: str) -> int:

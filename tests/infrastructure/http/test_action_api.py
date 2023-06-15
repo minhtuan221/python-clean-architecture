@@ -9,7 +9,7 @@ class TestActionAPI:
 
     @pytest.mark.run(order=11)
     def test_create_new_action(self):
-        print('test action API')
+        print('\ntest action API')
         # Make a POST request to the endpoint
         response = client.post("/api/action",
                                json={"name": "Test Action", "description": "Test Description",
