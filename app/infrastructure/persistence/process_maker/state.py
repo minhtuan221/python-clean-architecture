@@ -39,7 +39,7 @@ class StateRepository(object):
                 .filter(State.deleted_at == None).first()
         return state
 
-    def search(self, name: str = '', page: int = 1, page_size: int = 20) -> List[State]:
+    def search(self, name: str = '', process_id: int = 0, page: int = 1, page_size: int = 20) -> List[State]:
         limit, offset = get_limit_offset(page, page_size)
         with self.db.new_session() as db:
             query = db.session.query(State) \
@@ -48,6 +48,8 @@ class StateRepository(object):
 
             if name:
                 query = query.filter(State.name.like(f"%{name}%"))
+            if process_id:
+                query = query.filter(State.process_id == process_id)
 
             states: List[State] = query.offset(offset).limit(limit).all()
         return states

@@ -7,7 +7,7 @@ from app.domain.utils import validation
 from app.domain.utils import generator
 from app.domain.utils import error_collection
 from app.config import Config
-from app.domain.model.user import User
+from app.domain.model.user import User, pack_user_payload
 from app.domain.service.email import EmailService
 from app.infrastructure.persistence.access_policy import AccessPolicyRepository
 from app.infrastructure.persistence.blacklist_token import BlacklistTokenRepository
@@ -60,7 +60,8 @@ class UserService(object):
         user.is_confirmed = False
         u = self.user_repo.create(user)
         if self.email_service:
-            self.email_service.send_confirm_email(user.email, confirm_url, template='user/activate.html')
+            self.email_service.send_confirm_email(user.email, confirm_url,
+                                                  template='user/activate.html')
         return u
 
     def confirm_user_email(self, token):
@@ -74,11 +75,13 @@ class UserService(object):
             if not user:
                 raise error_collection.RecordNotFound
             if user.is_confirmed:
-                raise errors.Error('Account already confirmed. Please login.', errors.HttpStatusCode.Bad_Request)
+                raise errors.Error('Account already confirmed. Please login.',
+                                   errors.HttpStatusCode.Bad_Request)
             else:
                 user.is_confirmed = True
                 user = self.user_repo.update(user)
-                self.access_policy_repo.change_user(user, note=f'update user is_confirmed = {user.is_confirmed}')
+                self.access_policy_repo.change_user(user,
+                                                    note=f'update user is_confirmed = {user.is_confirmed}')
                 return True
         return False
 
@@ -87,7 +90,8 @@ class UserService(object):
         if not user:
             raise error_collection.RecordNotFound
         if self.email_service:
-            self.email_service.send_confirm_email(user.email, confirm_url, template='user/reset_password.html')
+            self.email_service.send_confirm_email(user.email, confirm_url,
+                                                  template='user/reset_password.html')
         return user
 
     def confirm_reset_user_password(self, token):
@@ -113,21 +117,11 @@ class UserService(object):
         user, roles, permissions = self.user_repo.find_user_for_auth(email)
         if user:
             if user.verify_password(password):
-                role_ids = []
-                for r in roles:
-                    role_ids.append(r.id)
+                role_ids = [r.id for r in roles]
                 permissions_name: Set[str] = set()
                 for p in permissions:
                     permissions_name.add(p.permission)
-                other_info = {
-                    'user': {
-                        'id': user.id,
-                        'email': user.email,
-                        'is_confirmed': user.is_confirmed
-                    },
-                    'role_ids': role_ids,
-                    'permissions': list(permissions_name)
-                }
+                other_info = pack_user_payload(user, role_ids, list(permissions_name))
                 token = self.encode_auth_token(user, other_payload_info=other_info)
                 # create and return token here
                 return token
@@ -144,7 +138,7 @@ class UserService(object):
         user = self.user_repo.find(user_id)
         if user:
             return user
-        raise error_collection.RecordNotFound
+        raise error_collection.RecordNotFound(f"user ({user_id}) not found")
 
     def find_by_email(self, email: str) -> User:
         user = self.user_repo.find_by_email(email)
@@ -166,7 +160,8 @@ class UserService(object):
         return users
 
     @type_check
-    def update_password(self, user_id: int, old_password: str, new_password: str, retype_password: str):
+    def update_password(self, user_id: int, old_password: str, new_password: str,
+                        retype_password: str):
         if new_password != retype_password:
             raise errors.Error(
                 'New Password and retype password is not matched')
@@ -188,7 +183,8 @@ class UserService(object):
             raise error_collection.RecordNotFound
         user.is_confirmed = is_confirmed
         user = self.user_repo.update(user)
-        self.access_policy_repo.change_user(user, note=f'update user is_confirmed = {user.is_confirmed}')
+        self.access_policy_repo.change_user(user,
+                                            note=f'update user is_confirmed = {user.is_confirmed}')
         return user
 
     def validate_access_policy(self, user_id: int, role_ids: List[int], token_iat_int: int):
@@ -196,8 +192,9 @@ class UserService(object):
         if checker is None:
             return True
         if time_to_int(checker.denied_before) > token_iat_int:
-            raise errors.Error(f'Token rejected because of changing in user and role: {checker.note}',
-                               errors.HttpStatusCode.Unauthorized)
+            raise errors.Error(
+                f'Token rejected because of changing in user and role: {checker.note}',
+                errors.HttpStatusCode.Unauthorized)
         return True
 
     def delete(self, user_id: int):

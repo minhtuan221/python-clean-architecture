@@ -1,18 +1,15 @@
-from typing import Any, Union
+from typing import Any, Union, Optional
 from fastapi.responses import JSONResponse
 from fastapi import Request
 from pydantic import BaseModel
 from fastapi import status
-import datetime
-import time
 from functools import wraps
 from logging import Logger
-from typing import List
 
+from app.domain.model.user import UserPayload, unpack_user_payload
 from app.domain.utils import error_collection
 from app.domain.service.user import UserService
-from app.pkgs import errors
-from app.pkgs.errors import Error, HttpStatusCode
+from app.pkgs.errors import Error
 import traceback
 
 
@@ -35,10 +32,9 @@ def error_handler(func):
     return wrapper
 
 
-class UserPayload:
-    user: dict
-    roles: list
-    permissions: List[str]
+class Req(Request):
+    """Request but was assigned UserPayload"""
+    user_payload: UserPayload
 
 
 class FastAPIMiddleware(object):
@@ -102,7 +98,7 @@ class FastAPIMiddleware(object):
 
         return decorated
 
-    def _verify_auth_token(self, request: Request):
+    def _verify_auth_token(self, request: Request) -> Optional[UserPayload]:
         # Flask normally handles OPTIONS requests on its own, but in the
         # case it is configured to forward those to the application, we
         # need to ignore authentication headers and let the request through
@@ -110,12 +106,9 @@ class FastAPIMiddleware(object):
         if request.method.upper() != 'OPTIONS':  # pragma: no cover
             token = self.get_bearer_token(request)
             payload = self.user_service.validate_auth_token(token)
-            self.user_service.validate_access_policy(payload['sub'], payload['role_ids'], payload['iat'])
-            u = UserPayload
-            u.user = payload.get('user', None)
-            u.roles = payload.get('role_ids', None)
-            u.permissions = payload.get('permissions', None)
-            return u
+            self.user_service.validate_access_policy(payload['sub'], payload['role_ids'],
+                                                     payload['iat'])
+            return unpack_user_payload(payload)
         return None
 
     def require_permissions(self, *permissions):
@@ -133,6 +126,8 @@ class FastAPIMiddleware(object):
                 if not u:
                     # any handler for OPTION method should be here
                     raise Error("permission denied", status.HTTP_403_FORBIDDEN)
+                # assign user_payload, not use request.user
+                request.user_payload = u
                 if len(permissions) > 0:
                     for p in permissions:
                         if p in u.permissions:

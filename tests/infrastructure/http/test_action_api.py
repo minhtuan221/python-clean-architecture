@@ -1,3 +1,5 @@
+import pprint
+
 import pytest
 
 from app.domain.model.process_maker.action_type import ActionType
@@ -154,8 +156,8 @@ class TestActionAPI:
         # allow cancel request
         cancel_act = action_service.find_one(response.json()['id'])
         response = client.post("/api/action",
-                               json={"name": "raise request", "description": "approve request",
-                                     "action_type": ActionType.approve})
+                               json={"name": "raise request", "description": "raise request",
+                                     "action_type": ActionType.send})
         assert response.status_code == 200
         raise_act = action_service.find_one(response.json()['id'])
         response = client.post("/api/action",
@@ -178,6 +180,8 @@ class TestActionAPI:
         staff_group = target_service.find_one_by_name('staff group')
         leader_group = target_service.find_one_by_name('leader group')
         response = client.post(f"/api/action/{edit_act.id}/target/{staff_group.id}")
+        assert response.status_code == 200
+        response = client.post(f"/api/action/{raise_act.id}/target/{staff_group.id}")
         assert response.status_code == 200
         response = client.post(f"/api/action/{cancel_act.id}/target/{staff_group.id}")
         assert response.status_code == 200

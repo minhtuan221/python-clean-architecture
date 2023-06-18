@@ -82,7 +82,6 @@ class StateReq(BaseModel):
 @middleware.error_handler
 @middleware.require_permissions()
 async def add_state_to_process(request: Request, process_id: int, body: StateReq):
-    process = process_service.find_one(process_id)
     state = process_service.add_state_to_process(process_id, body.name, body.description, body.state_type)
     return state.to_json()
 

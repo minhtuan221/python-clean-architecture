@@ -14,13 +14,15 @@ class Serializable:
         # add validation here
         pass
 
-    def to_json(self) -> dict:
+    def to_json(self, except_fields: str=[]) -> dict:
         json_data = {}
         for key, value in self.__dict__.items():
-            if not key.startswith('_') and key not in self._json_black_list:
+            if not key.startswith('_') and key not in self._json_black_list and key not in except_fields:
                 if isinstance(value, (datetime.datetime, datetime.date)):
                     json_data[key] = value.isoformat()
                 elif isinstance(value, list):
+                    # fixme: without _json_black_list this code can make recursive reference. It
+                    #  should have a better way to avoid the recursion
                     json_data[key] = [v.to_json() if hasattr(v, 'to_json') else v for v in value]
                 else:
                     json_data[key] = value.to_json() if hasattr(value, 'to_json') else value

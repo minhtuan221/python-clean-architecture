@@ -6,6 +6,7 @@ from tests.infrastructure.http.test_action_api import TestActionAPI
 from tests.infrastructure.http.test_activity_api import TestActivityAPI
 from tests.infrastructure.http.test_group_api import TestGroupAPI
 from tests.infrastructure.http.test_process_api import TestProcessAPI
+from tests.infrastructure.http.test_request_api import TestRequestAPI
 from tests.infrastructure.http.test_target_api import TestTargetAPI
 from tests.pkgs.test_injector import TestContainer
 
@@ -20,4 +21,5 @@ test_cases = [
     TestActionAPI,
     TestActivityAPI,
     TestProcessAPI,
+    TestRequestAPI,
 ]

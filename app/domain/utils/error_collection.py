@@ -16,13 +16,13 @@ class EmailAlreadyExist(Error):
 @dataclass
 class RecordNotFound(Error):
     message: str = 'Record not found'
-    error_code: int = HttpStatusCode.Bad_Request
+    error_code: int = HttpStatusCode.Not_Found
 
 
 @dataclass
 class EmailCannotBeFound(Error):
     message: str = 'Email cannot be found'
-    error_code: int = HttpStatusCode.Bad_Request
+    error_code: int = HttpStatusCode.Not_Found
 
 
 @dataclass
@@ -83,6 +83,13 @@ class RoleNameAlreadyExist(Error):
 class RecordAlreadyExist(Error):
     message: str = 'Record already exists'
     error_code: int = HttpStatusCode.Bad_Request
+
+
+@dataclass
+class DontHaveRight(Error):
+    message: str = 'Do not have right'
+    error_code: int = HttpStatusCode.Bad_Request
+
 
 
 def test_raise_error():

@@ -68,6 +68,7 @@ def create_fastapi_app():
     from app.infrastructure.http.fastapi_adapter.process_maker.action import action_api
     from app.infrastructure.http.fastapi_adapter.process_maker.activity import activity_api
     from app.infrastructure.http.fastapi_adapter.process_maker.target import target_api
+    from app.infrastructure.http.fastapi_adapter.process_maker.request import request_api
     from app.infrastructure.http.fastapi_adapter.group import group_api
 
     fast_app.include_router(admin_api, prefix='/api')
@@ -77,6 +78,7 @@ def create_fastapi_app():
     fast_app.include_router(activity_api, prefix='/api')
     fast_app.include_router(group_api, prefix='/api')
     fast_app.include_router(target_api, prefix='/api')
+    fast_app.include_router(request_api, prefix='/api')
     return fast_app
 
 

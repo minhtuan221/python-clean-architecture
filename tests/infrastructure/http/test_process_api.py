@@ -285,7 +285,7 @@ class TestProcessAPI:
         complete_process = process_service.find_one_by_name("Test Process Workflow")
 
         assert len(complete_process.state) == 4
-        print(json.dumps(complete_process.to_json()))
+        pprint(complete_process.to_json())
 
 
 

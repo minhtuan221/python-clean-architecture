@@ -2,6 +2,7 @@ import binascii
 import hashlib
 import os
 from collections import namedtuple
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, List
 
@@ -67,3 +68,41 @@ class UserRole(Base):
     __tablename__ = 'user_role'
     user_id: int = Column(Integer, ForeignKey('users.id'), primary_key=True)
     role_id: int = Column(Integer, ForeignKey('roles.id'), primary_key=True)
+
+
+@dataclass
+class UserInfo:
+    id: int = 0
+    email: str = ''
+    is_confirmed: bool = False
+
+
+@dataclass
+class UserPayload:
+    user: UserInfo = None
+    roles: List[int] = None
+    permissions: List[str] = None
+
+
+def pack_user_payload(user: User, role_ids: List[int],
+                      permissions_name: List[str]) -> dict:
+    return {
+        'user': {
+            'id': user.id,
+            'email': user.email,
+            'is_confirmed': user.is_confirmed
+        },
+        'role_ids': role_ids,
+        'permissions': list(permissions_name)
+    }
+
+
+def unpack_user_payload(payload: dict) -> UserPayload:
+    u = UserPayload()
+    if 'user' in payload:
+        u.user = UserInfo(**payload['user'])
+    else:
+        u.user = UserInfo()
+    u.roles = payload.get('role_ids', [])
+    u.permissions = payload.get('permissions', [])
+    return u

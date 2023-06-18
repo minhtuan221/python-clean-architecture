@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from app.domain.model import Process, State, Route
+from app.domain.model.process_maker.state_type import StateType
 from app.domain.utils import error_collection, validation
 from app.infrastructure.persistence.process_maker.action import ActionRepository
 from app.infrastructure.persistence.process_maker.activity import ActivityRepository
@@ -32,7 +33,7 @@ class ProcessService(object):
 
         exist_record = self.process_repo.find_by_name(new_process.name)
         if exist_record:
-            raise error_collection.RecordAlreadyExist('name already exist')
+            raise error_collection.RecordAlreadyExist(f'name ({name}) already exist')
         return self.process_repo.create(new_process)
 
     def find_one(self, process_id: int, with_children: bool=True) -> Process:
@@ -42,7 +43,7 @@ class ProcessService(object):
         else:
             process = self.process_repo.find_one(process_id)
         if not process:
-            raise error_collection.RecordNotFound
+            raise error_collection.RecordNotFound(f"process ({process_id}) not found")
         return process
 
     def find_one_by_name(self, name: str) -> Process:
@@ -98,6 +99,16 @@ class ProcessService(object):
             raise error_collection.RecordNotFound(f'cannot find state name ({name})')
         return state
 
+    def find_start_point(self, process_id: int) -> State:
+        return self.find_state_by_type(process_id,state_type=StateType.start)
+
+    def find_state_by_type(self, process_id: int, state_type: str) -> State:
+        list_state = self.state_repo.search(process_id=process_id, page_size=2000)
+        for state in list_state:
+            if state.state_type == state_type:
+                return state
+        raise error_collection.RecordNotFound(f'cannot find state with type=({state_type})')
+
     def update_state_on_process(self, process_id: int, state_id: int, name: str = '',
                                 description: str = '',
                                 state_type: str = ''):
@@ -112,9 +123,7 @@ class ProcessService(object):
         return self.state_repo.update(state)
 
     def remove_state_from_process(self, process_id: int, state_id: int) -> State:
-
         state = self.find_state_on_process(process_id, state_id)
-
         self.state_repo.delete(state.id)
         return state
 

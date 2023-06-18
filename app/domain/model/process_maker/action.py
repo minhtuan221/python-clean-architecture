@@ -18,6 +18,9 @@ class Action(Base, Serializable):
 
     _json_black_list = ['route']
 
+    def get_route(self) -> 'Route':
+        return self.route
+
 
 class ActionTarget(Base, Serializable):
     __tablename__ = 'action_target'

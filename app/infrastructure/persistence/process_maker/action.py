@@ -30,6 +30,7 @@ class ActionRepository(object):
             action: Action = db.session.query(Action).filter_by(id=action_id). \
                 first()
             action.target
+            action.route
         return action
 
     def find_by_name(self, name: str) -> Optional[Action]:

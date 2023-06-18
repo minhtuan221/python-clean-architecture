@@ -14,7 +14,7 @@ def create_or_get_normal_user(email: str, password='1Pass@word') -> User:
     return user
 
 
-@cache()
+@cache
 def get_token_for_normal_user(email='test_bot@test_mail.com', password='1Pass@word') -> str:
     user = create_or_get_normal_user(email, password)
     return user.token

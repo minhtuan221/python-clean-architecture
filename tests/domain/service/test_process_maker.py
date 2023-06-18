@@ -5,6 +5,7 @@ import pytest
 from app.domain.model import Process
 from app.domain.model.process_maker.state_type import StateType
 from app.infrastructure.factory_bot.process_maker import create_work_flow
+from app.infrastructure.http.fastapi_adapter.process_maker.process import process_service
 
 
 class TestProcessMakerService:
@@ -19,7 +20,7 @@ class TestProcessMakerService:
         assert test_process.status == 'inactive'
 
     @pytest.mark.run(order=2)
-    def test_add_state_to_process(self, test_process, process_service):
+    def test_add_state_to_process(self, test_process):
         state_start = process_service.add_state_to_process(test_process.id, 'start', 'start',
                                                            StateType.start)
 

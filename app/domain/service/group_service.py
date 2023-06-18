@@ -84,3 +84,9 @@ class GroupService(object):
 
         # Update the group in the repository
         return self.group_repo.update(group)
+
+    def is_user_in_group(self,group_id: int, user_id: int) -> bool:
+        group_member = self.group_repo.is_user_in_group(group_id, user_id)
+        if group_member:
+            return True
+        return False

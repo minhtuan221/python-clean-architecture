@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from sqlalchemy.orm import joinedload
 
-from app.domain.model import ConnectionPool
+from app.domain.model import ConnectionPool, GroupMember
 from app.domain.model import Group
 from app.domain.utils.db_helper import get_limit_offset
 
@@ -39,6 +39,13 @@ class GroupRepository(object):
 
             groups: List[Group] = query.offset(offset).limit(limit).all()
         return groups
+
+    def is_user_in_group(self, group_id: int, user_id: int) -> Optional[GroupMember]:
+        with self.db.new_session() as db:
+            group_member = db.session.query(GroupMember)\
+                .filter(GroupMember.group_id == group_id)\
+                .filter(GroupMember.user_id == user_id).first()
+        return group_member
 
     def update(self, group: Group) -> Group:
         with self.db.new_session() as db:

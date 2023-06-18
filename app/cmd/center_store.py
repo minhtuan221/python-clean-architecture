@@ -7,6 +7,7 @@ from app.domain.service.process_maker.action_service import ActionService
 from app.domain.service.process_maker.activity_service import ActivityService
 from app.domain.service.process_maker.process_service import ProcessService
 from app.domain.service.process_maker.target_service import TargetService
+from app.domain.service.process_maker.request_service import RequestService
 from app.domain.service.user import UserService
 from app.domain.service.user_role import UserRoleService
 from app.infrastructure.http.fastapi_adapter.middle_ware import FastAPIMiddleware
@@ -19,9 +20,14 @@ from app.infrastructure.persistence.process_maker.action import ActionRepository
 from app.infrastructure.persistence.process_maker.activity import ActivityRepository
 from app.infrastructure.persistence.process_maker.process import ProcessRepository
 from app.infrastructure.persistence.process_maker.request import RequestRepository
+from app.infrastructure.persistence.process_maker.request_stakeholder import \
+    RequestStakeholderRepository
 from app.infrastructure.persistence.process_maker.route import RouteRepository
 from app.infrastructure.persistence.process_maker.state import StateRepository
 from app.infrastructure.persistence.process_maker.target import TargetRepository
+from app.infrastructure.persistence.process_maker.request_action import RequestActionRepository
+from app.infrastructure.persistence.process_maker.request_data import RequestDataRepository
+from app.infrastructure.persistence.process_maker.request_note import RequestNoteRepository
 from app.infrastructure.persistence.role import RoleRepository
 from app.infrastructure.persistence.user import UserRepository
 from app.pkgs.injector import Container
@@ -54,6 +60,10 @@ container.add_singleton(ActivityRepository)
 container.add_singleton(ActionRepository)
 container.add_singleton(TargetRepository)
 container.add_singleton(RequestRepository)
+container.add_singleton(RequestDataRepository)
+container.add_singleton(RequestNoteRepository)
+container.add_singleton(RequestActionRepository)
+container.add_singleton(RequestStakeholderRepository)
 container.add_singleton(RouteRepository)
 container.add_singleton(StateRepository)
 container.add_singleton(ProcessService)
@@ -61,6 +71,7 @@ container.add_singleton(ActionService)
 container.add_singleton(ActivityService)
 container.add_singleton(TargetService)
 container.add_singleton(GroupService)
+container.add_singleton(RequestService)
 container.build()
 
 user_role_service = container.get_singleton(UserRoleService)
