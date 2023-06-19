@@ -32,13 +32,13 @@ class TestProcessMakerService:
 
         state_done = process_service.add_state_to_process(test_process.id, 'done', 'done',
                                                           StateType.complete)
-        test_process_json = test_process.to_json()
+        test_process_json = process_service.find_one(test_process.id).to_json()
         states = test_process_json['state']
 
-        assert states[0] == state_start.to_json()
-        assert states[1] == state_approve.to_json()
-        assert states[2] == state_denied.to_json()
-        assert states[3] == state_done.to_json()
+        assert states[0]['name'] == state_start.name
+        assert states[1]['name'] == state_approve.name
+        assert states[2]['name'] == state_denied.name
+        assert states[3]['name'] == state_done.name
 
         route_start_to_approve = process_service.add_route_to_process(test_process.id, state_start.id,
                                                                       state_approve.id)
@@ -53,20 +53,23 @@ class TestProcessMakerService:
         route_approve_to_start = process_service.add_route_to_process(test_process.id,
                                                                       state_approve.id,
                                                                       state_start.id)
-        test_process_json = test_process.to_json()
+        test_process_json = process_service.find_one(test_process.id).to_json()
         states = test_process_json['state']
 
-        assert states[0] == state_start.to_json()
-        assert states[1] == state_approve.to_json()
-        assert states[2] == state_denied.to_json()
-        assert states[3] == state_done.to_json()
+        assert states[0]['name'] == state_start.name
+        assert states[1]['name'] == state_approve.name
+        assert states[2]['name'] == state_denied.name
+        assert states[3]['name'] == state_done.name
 
-        assert states[0]['route'][0] == route_start_to_approve.to_json()
-        assert states[1]['route'][0] == route_approve_to_done.to_json()
-        assert states[1]['route'][1] == route_approve_to_denied.to_json()
-        assert states[1]['route'][2] == route_approve_to_start.to_json()
+        assert states[0]['route'][0]['current_state_id'] == route_start_to_approve.current_state_id
+        assert states[1]['route'][0]['current_state_id']  == route_approve_to_done.current_state_id
+        assert states[1]['route'][1]['current_state_id']  == route_approve_to_denied.current_state_id
+        assert states[1]['route'][2]['current_state_id']  == route_approve_to_start.current_state_id
 
-        # pprint(test_process.to_json())
+        assert states[0]['route'][0]['next_state_id'] == route_start_to_approve.next_state_id
+        assert states[1]['route'][0]['next_state_id'] == route_approve_to_done.next_state_id
+        assert states[1]['route'][1]['next_state_id'] == route_approve_to_denied.next_state_id
+        assert states[1]['route'][2]['next_state_id'] == route_approve_to_start.next_state_id
 
 
 

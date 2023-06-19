@@ -23,6 +23,12 @@ class RequestRepository(object):
         with self.db.new_session() as db:
             request: Request = db.session.query(Request).filter_by(
                 id=request_id).first()
+            if request:
+                request.request_action
+                request.request_note
+                request.request_stakeholder
+                request.request_data
+                request.current_state
         return request
 
     def find_one_by_title(self, title: str) -> Optional[Request]:

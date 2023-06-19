@@ -116,6 +116,8 @@ class RequestAction(Base, Serializable):
     route_id: int = Column(Integer, ForeignKey('route.id'))
     status: str = Column(String(64), default='active')  # can be active|done|revert
 
+    route_to_next_state: Route = None
+
     request = relationship("Request", back_populates="request_action")
 
     _json_black_list = ['request']

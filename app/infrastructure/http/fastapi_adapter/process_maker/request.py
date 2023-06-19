@@ -56,6 +56,11 @@ class ListRequestResponse(BaseModel):
     page_size: int
 
 
+class ActionPayload(BaseModel):
+    user_id: int
+    action_id: int
+
+
 @request_api.post('/request', tags=['request'], response_model=RequestResponse)
 @middleware.error_handler
 @middleware.require_permissions()
@@ -99,3 +104,12 @@ async def find_one_request(request: Req, request_id: int, specific_user_id: int)
     user_payload = request.user_payload
     actions = request_service.find_request_allowed_action_for_specific_user(request_id, user_payload.user.id, specific_user_id)
     return dict(data=[action.to_json() for action in actions])
+
+
+@request_api.post('/request/{request_id}/action/{action_id}', tags=['request'], response_model=ListRequestResponse)
+@middleware.error_handler
+@middleware.require_permissions()
+async def user_commit_action(request: Req, request_id: int, action_id: int):
+    user_payload = request.user_payload
+    request_action = request_service.user_commit_action(request_id, user_payload.user.id, action_id)
+    return request_action.to_json()

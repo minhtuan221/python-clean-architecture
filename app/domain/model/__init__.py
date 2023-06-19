@@ -1,8 +1,9 @@
+from asyncio import current_task
 from contextlib import contextmanager
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from typing import Callable
+from typing import Callable, Dict
 from sqlalchemy.orm import scoped_session
 
 Base = declarative_base()
@@ -30,41 +31,65 @@ class ConnectionPool(object):
             sessionmaker(bind=self.engine, expire_on_commit=False, autocommit=False)
         )
         self.session_factory = session_factory
-        self._test_session: Session = None
         self._is_test: bool = False
-        self._test_engine = None
+        self.task_to_session_map: Dict[int, Session] = {}
 
     def open_test_session(self):
         print('warning: this is test session. Do not use in production')
         # create_engine("sqlite:///:memory:") or create_engine('sqlite:///./test_session.db')
         # will work as well, but we use file to make more real world tests
-        self._test_engine = create_engine('sqlite:///:memory:')
-        self._test_session = scoped_session(
-            sessionmaker(bind=self._test_engine, expire_on_commit=False, autocommit=False)
+        connection_string = 'sqlite:///./test_session.db'
+        self.engine = create_engine(connection_string, echo=False)
+        self.connection_string: str = connection_string
+        session_factory = scoped_session(
+            sessionmaker(bind=self.engine, expire_on_commit=False, autocommit=False)
         )
+        self.session_factory = session_factory
         # should drop database first
-        Base.metadata.drop_all(self._test_engine)
+        Base.metadata.drop_all(self.engine)
         # Create database tables
-        Base.metadata.create_all(self._test_engine)
+        Base.metadata.create_all(self.engine)
         self._is_test = True
 
     def close_test_session(self):
-        self._test_session.close()
-        self._test_session = None
         self._is_test = False
         print('\nwarning: test session is closed')
 
+    def open_session(self):
+        task = current_task()
+        if id(task) not in self.task_to_session_map:
+            # print('open task', task.get_name())
+            self.task_to_session_map[id(task)] = self.session_factory()
+
+    def close_session(self):
+        task = current_task()
+        if id(task) in self.task_to_session_map:
+            # print('close task', task.get_name())
+            session = self.task_to_session_map.pop(id(task))
+            session.close()
+
+    def get_current_task_id(self) -> int:
+        try:
+            return id(current_task())
+        except RuntimeError:
+            return 0
+
     def new_session(self):
-        if self._is_test:
-            return TestDBConnection(self._test_session)
-        new_session = self.session_factory()
-        return SQLAlchemyDBConnection(session=new_session)
+        task_id = self.get_current_task_id()
+        if task_id in self.task_to_session_map:
+            new_session = self.task_to_session_map[task_id]
+            auto_close = False
+        else:
+            new_session = self.session_factory()
+            auto_close = True
+        return SQLAlchemyDBConnection(session=new_session, auto_close=auto_close)
 
 
 class SQLAlchemyDBConnection(object):
     """SQLAlchemy database connection"""
 
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, auto_close=True):
+        self.auto_close = auto_close
         self.session: Session = session
         self.error = None
 
@@ -79,7 +104,8 @@ class SQLAlchemyDBConnection(object):
             self.error = e
             raise e
         finally:
-            self.session.close()
+            if self.auto_close:
+                self.session.close()
             self.error = None
 
 

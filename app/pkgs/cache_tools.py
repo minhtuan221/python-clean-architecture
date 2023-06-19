@@ -46,7 +46,7 @@ class Cache:
         return wrapper
 
 
-cache = Cache(max_size=None, expire_time=60)
+cache = Cache(max_size=1000, expire_time=120)
 
 # Define a test function
 def expensive_function(n):

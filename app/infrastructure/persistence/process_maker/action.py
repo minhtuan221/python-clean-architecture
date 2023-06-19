@@ -29,8 +29,8 @@ class ActionRepository(object):
         with self.db.new_session() as db:
             action: Action = db.session.query(Action).filter_by(id=action_id). \
                 first()
-            action.target
-            action.route
+            if action:
+                action.target
         return action
 
     def find_by_name(self, name: str) -> Optional[Action]:

@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from sqlalchemy.orm import joinedload
 
-from app.domain.model import ConnectionPool, GroupMember
+from app.domain.model import ConnectionPool, GroupMember, User
 from app.domain.model import Group
 from app.domain.utils.db_helper import get_limit_offset
 
@@ -22,6 +22,8 @@ class GroupRepository(object):
     def find_one(self, group_id: int) -> Optional[Group]:
         with self.db.new_session() as db:
             group: Group = db.session.query(Group).filter_by(id=group_id).first()
+            if group:
+                group.member
         return group
 
     def find_by_name(self, name: str) -> Optional[Group]:

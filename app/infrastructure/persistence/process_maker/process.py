@@ -29,13 +29,16 @@ class ProcessRepository(object):
         with self.db.new_session() as db:
             process: Process = db.session.query(Process).filter_by(id=process_id). \
                 first()
-            for s in process.state:
-                s.route
+            if process:
+                for s in process.state:
+                    s.route
         return process
 
     def find_by_name(self, name: str) -> Optional[Process]:
         with self.db.new_session() as db:
             process: Process = db.session.query(Process).filter_by(name=name).filter(Process.deleted_at == None).first()
+            if process:
+                process.state
         return process
 
     def search(self, name: str = '', page: int = 1, page_size: int = 20) -> List[Process]:

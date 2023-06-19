@@ -63,6 +63,9 @@ class User(Base, Serializable):
         password_hash = binascii.hexlify(password_hash).decode('ascii')
         return password_hash == stored_password
 
+    def __repr__(self):
+        return f"User(id={self.id}, email={self.email})"
+
 
 class UserRole(Base):
     __tablename__ = 'user_role'

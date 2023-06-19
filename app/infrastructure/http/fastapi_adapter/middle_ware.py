@@ -1,3 +1,4 @@
+from asyncio import current_task
 from typing import Any, Union, Optional
 from fastapi.responses import JSONResponse
 from fastapi import Request
@@ -6,6 +7,7 @@ from fastapi import status
 from functools import wraps
 from logging import Logger
 
+from app.domain.model import ConnectionPool
 from app.domain.model.user import UserPayload, unpack_user_payload
 from app.domain.utils import error_collection
 from app.domain.service.user import UserService
@@ -38,8 +40,9 @@ class Req(Request):
 
 
 class FastAPIMiddleware(object):
-    def __init__(self, a: UserService, logger: Logger):
+    def __init__(self, a: UserService, connection_pool: ConnectionPool, logger: Logger):
         self.user_service = a
+        self.connection_pool = connection_pool
         self.permissions_list = set()
         self.logger = logger
 
@@ -56,7 +59,9 @@ class FastAPIMiddleware(object):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             try:
+                self.connection_pool.open_session()
                 res = await func(*args, **kwargs)
+                self.connection_pool.close_session()
                 if isinstance(res, BaseModel):
                     return res
                 return JSONResponse(content=res)
