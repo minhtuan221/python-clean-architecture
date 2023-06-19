@@ -119,5 +119,6 @@ class RequestAction(Base, Serializable):
     route_to_next_state: Route = None
 
     request = relationship("Request", back_populates="request_action")
+    action = relationship("Action", back_populates="request_action")
 
     _json_black_list = ['request']

@@ -14,7 +14,6 @@ class TestProcessAPI:
 
     @pytest.mark.run(order=31)
     def test_create_new_process(self):
-        print('\ntest process api')
         # Make a POST request to the endpoint
         response = client.post("/api/process",
                                json={"name": "Test Process Workflow", "description": "Test Description"})
@@ -147,8 +146,6 @@ class TestProcessAPI:
 
         # Assert the response status code
         assert response.status_code == 200
-
-        # pprint(response.json())
 
         # Assert the response JSON data
         data = response.json()
@@ -284,8 +281,7 @@ class TestProcessAPI:
 
         complete_process = process_service.find_one_by_name("Test Process Workflow")
 
-        assert len(complete_process.state) == 4
-        pprint(complete_process.to_json())
+        assert len(complete_process.to_json()['state']) == 4
 
 
 

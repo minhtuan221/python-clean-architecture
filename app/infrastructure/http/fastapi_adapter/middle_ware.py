@@ -58,20 +58,23 @@ class FastAPIMiddleware(object):
 
         @wraps(func)
         async def wrapper(*args, **kwargs):
+            db_session = self.connection_pool.open_session()
             try:
-                self.connection_pool.open_session()
                 res = await func(*args, **kwargs)
-                self.connection_pool.close_session()
+                db_session.commit()
                 if isinstance(res, BaseModel):
                     return res
                 return JSONResponse(content=res)
             except Error as e:
+                db_session.rollback()
                 return JSONResponse(content=e.to_json(), status_code=e.code())
             except Exception as e:
-                traceback.print_exc()
-                # self.logger.error(e, exc_info=True)
+                db_session.rollback()
+                self.logger.error(e)
                 return JSONResponse(content=dict(data=None, error=f'Unknown error: {str(e)}'),
                                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            finally:
+                self.connection_pool.close_session()
 
         return wrapper
 

@@ -24,7 +24,8 @@ class RequestRepository(object):
             request: Request = db.session.query(Request).filter_by(
                 id=request_id).first()
             if request:
-                request.request_action
+                for act in request.request_action:
+                    act.action
                 request.request_note
                 request.request_stakeholder
                 request.request_data

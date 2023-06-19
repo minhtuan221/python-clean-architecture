@@ -151,8 +151,6 @@ class RequestService(object):
         allowed_actions = [action for action in actions if self.should_user_commit_action(user.id, action)]
 
         # allowed_action = next((action for action in allowed_actions if action.id == committed_action.id), None)
-        for a in allowed_actions:
-            print(a)
         if not allowed_actions:
             raise error_collection.DontHaveRight(f"user ({user.id}) do not have right to commit this action")
         request_action = RequestAction(user_id=user.id)
@@ -173,7 +171,7 @@ class RequestService(object):
         request_action = self.create_request_action(request, user, action)
         # this action is accepted => disable all other action
         for request_action in request.request_action:
-            request_action.status = 'inactive'
+            request_action.status = 'done'
         # request.request_action.append(self.request_action_repo.create(request_action))
         # trigger the change state of request id
         request.current_state_id = request_action.route_to_next_state.next_state_id

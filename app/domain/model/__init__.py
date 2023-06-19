@@ -53,45 +53,48 @@ class ConnectionPool(object):
 
     def close_test_session(self):
         self._is_test = False
+        for k, session in self.task_to_session_map.items():
+            session.close()
+            raise ValueError(f'unclose session')
         print('\nwarning: test session is closed')
 
-    def open_session(self):
-        task = current_task()
-        if id(task) not in self.task_to_session_map:
+    def open_session(self) -> Session:
+        task_id = self.get_current_task_id()
+        if task_id not in self.task_to_session_map:
             # print('open task', task.get_name())
-            self.task_to_session_map[id(task)] = self.session_factory()
+            self.task_to_session_map[task_id] = self.session_factory()
+        return self.task_to_session_map[task_id]
 
     def close_session(self):
-        task = current_task()
-        if id(task) in self.task_to_session_map:
+        task_id = self.get_current_task_id()
+        if task_id in self.task_to_session_map:
             # print('close task', task.get_name())
-            session = self.task_to_session_map.pop(id(task))
+            session = self.task_to_session_map.pop(task_id)
             session.close()
 
     def get_current_task_id(self) -> int:
         try:
             return id(current_task())
-        except RuntimeError:
+        except RuntimeError as e:
             return 0
 
     def new_session(self):
         task_id = self.get_current_task_id()
         if task_id in self.task_to_session_map:
             new_session = self.task_to_session_map[task_id]
-            auto_close = False
+            auto_handle = True
         else:
             new_session = self.session_factory()
-            auto_close = True
-        return SQLAlchemyDBConnection(session=new_session, auto_close=auto_close)
+            auto_handle = False
+        return SQLAlchemyDBConnection(session=new_session, auto_handle=auto_handle)
 
 
 class SQLAlchemyDBConnection(object):
     """SQLAlchemy database connection"""
 
-    def __init__(self, session: Session, auto_close=True):
-        self.auto_close = auto_close
+    def __init__(self, session: Session, auto_handle=False):
+        self.auto_handle = auto_handle
         self.session: Session = session
-        self.error = None
 
     def __enter__(self):
         return self
@@ -101,27 +104,10 @@ class SQLAlchemyDBConnection(object):
             self.session.commit()
         except Exception as e:
             self.session.rollback()
-            self.error = e
             raise e
         finally:
-            if self.auto_close:
+            if not self.auto_handle:
                 self.session.close()
-            self.error = None
-
-
-class TestDBConnection(SQLAlchemyDBConnection):
-    """SQLAlchemy database connection for test only"""
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        try:
-            self.session.commit()
-        except Exception as e:
-            self.session.rollback()
-            self.error = e
-            raise e
-        finally:
-            # don't need to close test session
-            pass
 
 
 @contextmanager

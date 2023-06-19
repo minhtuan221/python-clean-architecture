@@ -11,7 +11,6 @@ class TestGroupAPI:
 
     @pytest.mark.run(order=1)
     def test_create_new_group(self):
-        print('\ntest group api')
         # Make a POST request to the endpoint
         response = client.post("/api/group",
                                json={"name": "Test Group", "description": "Test Description"})

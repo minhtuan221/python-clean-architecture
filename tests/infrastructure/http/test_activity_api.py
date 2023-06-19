@@ -12,7 +12,6 @@ class TestActivityAPI:
 
     @pytest.mark.run(order=test_order+1)
     def test_create_new_activity(self):
-        print('\ntest activity API')
         # Make a POST request to the endpoint
         response = client.post("/api/activity",
                                json={"name": "Test Activity", "description": "Test Description",

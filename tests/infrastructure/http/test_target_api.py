@@ -10,7 +10,6 @@ class TestTargetAPI:
 
     @pytest.mark.run(order=11)
     def test_create_new_target(self):
-        print('\ntest target API')
         # Make a POST request to the endpoint
         response = client.post("/api/target",
                                json={"name": "Test Target", "description": "Test Description",

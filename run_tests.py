@@ -1,3 +1,5 @@
+import pytest
+
 from app.infrastructure.factory_bot.setup_test import setup_before_tests
 from tests.domain.service.test_process_maker import TestProcessMakerService
 from tests.domain.service.test_user import TestUserService

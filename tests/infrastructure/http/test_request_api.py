@@ -3,7 +3,9 @@ from pprint import pprint
 
 import pytest
 
+from app.cmd.center_store import connection_pool
 from app.domain.model.process_maker.state_type import StateType
+from app.domain.utils import error_collection
 from app.infrastructure.factory_bot.user import create_or_get_normal_user
 from app.infrastructure.http.fastapi_adapter.process_maker.action import action_service
 from app.infrastructure.http.fastapi_adapter.process_maker.activity import activity_service
@@ -34,8 +36,6 @@ class TestRequestAPI:
     @pytest.fixture
     @pytest.mark.run(order=41)
     def test_new_request(self, staff_1, completed_process):
-        print('\ntest request api')
-
         # Make a POST request to the endpoint
         response = client.post("/api/request",
                                json={
@@ -129,9 +129,26 @@ class TestRequestAPI:
         assert response.status_code == 400
         assert data['error'].endswith('do not have right to commit this action')
 
-    # @pytest.fixture
+    @pytest.mark.run(order=44)
+    def test_staff_commit_edit_action_ok(self, staff_1, test_new_request):
+        # find the action
+        connection_pool.open_session()
+        edit_act = action_service.find_one_by_name('edit request')
+
+        request = request_service.user_commit_action(test_new_request.id, staff_1.id, edit_act.id)
+        data = request.to_json()
+        connection_pool.close_session()
+        assert data['request_action'][0]['action_id'] == edit_act.id
+
+    @pytest.fixture
     @pytest.mark.run(order=45)
-    def test_staff_raise_request(self, staff_1, leader_1, test_new_request):
+    def test_raise_request(self, staff_1, leader_1, test_new_request):
+        response = client.get(f"/api/request/{test_new_request.id}")
+        # Assert the response status code
+        data = response.json()
+
+        assert data['current_state']['name'] == 'start point'
+
         client.token = staff_1.token
         # find the action
         raise_act = action_service.find_one_by_name('raise request')
@@ -139,28 +156,66 @@ class TestRequestAPI:
         response = client.post(f"/api/request/{test_new_request.id}/action/{raise_act.id}",
                                json={})
 
-        data = response.json()
         # Assert the response status code
         assert response.status_code == 200
-        # return test_new_request
         # Make a GET request to the endpoint
         response = client.get(f"/api/request/{test_new_request.id}")
         # Assert the response status code
-        pprint(response.json())
+        data = response.json()
+        assert data['current_state']['name'] == 'request for approve'
+        assert data['request_action'][0]['status'] == 'done'
+        assert data['request_action'][0]['action']['name'] == 'raise request'
+        yield request_service.find_one_request(data['id'])
 
-    # @pytest.fixture
-    # @pytest.mark.run(order=46)
-    # def test_leader_raise_request(self, staff_1, leader_1, test_new_request):
-    #     client.token = staff_1.token
-    #
-    #     client.token = leader_1.token
-    #     # find the action
-    #     approve_act = action_service.find_one_by_name('approve request')
-    #     # Make a POST request to the endpoint
-    #     response = client.post(f"/api/request/{test_new_request.id}/action/{approve_act.id}",
-    #                            json={})
-    #
-    #     data = response.json()
-    #     pprint(data)
-    #     # Assert the response status code
-    #     assert response.status_code == 200
+    @pytest.mark.run(order=46)
+    def test_staff_commit_edit_action_failed(self, staff_1, test_raise_request):
+        client.token = staff_1.token
+        connection_pool.open_session()
+        edit_act = action_service.find_one_by_name('edit request')
+        with pytest.raises(error_collection.DontHaveRight):
+            request = request_service.user_commit_action(test_raise_request.id, staff_1.id, edit_act.id)
+        connection_pool.close_session()
+
+    @pytest.mark.run(order=46)
+    def test_approve_request(self, staff_1, leader_1, test_raise_request):
+        client.token = leader_1.token
+        # find the action
+        approve_act = action_service.find_one_by_name('approve request')
+        # Make a POST request to the endpoint
+        response = client.post(f"/api/request/{test_raise_request.id}/action/{approve_act.id}",
+                               json={})
+
+        data = response.json()
+        # Assert the response status code
+        assert response.status_code == 200
+        # Make a GET request to the endpoint
+        response = client.get(f"/api/request/{test_raise_request.id}")
+        # Assert the response status code
+        data = response.json()
+        assert data['current_state']['name'] == 'done'
+        assert data['request_action'][0]['status'] == 'done'
+        assert data['request_action'][0]['action']['name'] == 'raise request'
+        assert data['request_action'][1]['status'] == 'done'
+        assert data['request_action'][1]['action']['name'] == 'approve request'
+
+    @pytest.mark.run(order=46)
+    def test_deny_request(self, staff_1, leader_1, test_raise_request):
+        client.token = leader_1.token
+        # find the action
+        deny_act = action_service.find_one_by_name('deny request')
+        # Make a POST request to the endpoint
+        response = client.post(f"/api/request/{test_raise_request.id}/action/{deny_act.id}",
+                               json={})
+
+        data = response.json()
+        # Assert the response status code
+        assert response.status_code == 200
+        # Make a GET request to the endpoint
+        response = client.get(f"/api/request/{test_raise_request.id}")
+        # Assert the response status code
+        data = response.json()
+        assert data['current_state']['name'] == 'denied'
+        assert data['request_action'][0]['status'] == 'done'
+        assert data['request_action'][0]['action']['name'] == 'raise request'
+        assert data['request_action'][1]['status'] == 'done'
+        assert data['request_action'][1]['action']['name'] == 'deny request'
