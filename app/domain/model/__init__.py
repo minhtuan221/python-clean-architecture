@@ -38,7 +38,7 @@ class ConnectionPool(object):
         print('warning: this is test session. Do not use in production')
         # create_engine("sqlite:///:memory:") or create_engine('sqlite:///./test_session.db')
         # will work as well, but we use file to make more real world tests
-        connection_string = 'sqlite:///./test_session.db'
+        connection_string = 'sqlite:///:memory:'
         self.engine = create_engine(connection_string, echo=False)
         self.connection_string: str = connection_string
         session_factory = scoped_session(

@@ -37,6 +37,9 @@ class User(Base, Serializable):
     def json(self) -> dict:
         return self.to_json()
 
+    def email_name(self) -> str:
+        return self.email.split('@')[0]
+
     @staticmethod
     def from_json(d: dict):
         instance = namedtuple('User', d.keys())(*d.values())
