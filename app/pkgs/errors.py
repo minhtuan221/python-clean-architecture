@@ -19,7 +19,7 @@ class Error(Exception):
     error_code: int = 0
     data: dict = None
 
-    def __init__(self, message: str = 'there is no error here', error_code=HttpStatusCode.OK, data=None):
+    def __init__(self, message: str = 'there is test error here', error_code=HttpStatusCode.Bad_Request, data=None):
         self.message: str = message
         self.error_code: int = error_code
         self.data = data

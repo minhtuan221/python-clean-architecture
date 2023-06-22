@@ -67,6 +67,7 @@ class FastAPIMiddleware(object):
                 return JSONResponse(content=res)
             except Error as e:
                 db_session.rollback()
+                self.logger.error(e, exc_info=e)
                 return JSONResponse(content=e.to_json(), status_code=e.code())
             except Exception as e:
                 db_session.rollback()

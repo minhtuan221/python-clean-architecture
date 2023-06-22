@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 
 from app.domain.model import Base, Route
 from app.domain.model._serializable import Serializable
-from app.domain.utils import validation
+from app.domain.utils import validation, error_collection
 
 
 class DataType:
@@ -21,6 +21,13 @@ class NoteType:
 class StakeholderType:
     user = 'user'
     group = 'group'
+
+
+class RequestStatus:
+    active = 'active'
+    archived = 'archived'
+    done = 'done'
+
 
 
 class Request(Base, Serializable):
@@ -52,6 +59,16 @@ class Request(Base, Serializable):
     def get_route(self) -> List[Route]:
         return self.current_state.route
 
+    def validate(self):
+        self.title = validation.validate_short_paragraph(self.title)
+        if self.entity_model:
+            self.entity_model = validation.validate_name_without_space(self.entity_model)
+        if not self.status:
+            self.status = RequestStatus.active
+        self.status = self.status.strip()
+        if self.status not in RequestStatus.__dict__.values():
+            raise error_collection.ValidationError(f"invalid status, receive {self.status}")
+
 
 class RequestNote(Base, Serializable):
     """RequestNote can be use as a note/comment or notify by system
@@ -69,6 +86,17 @@ class RequestNote(Base, Serializable):
     request = relationship("Request", back_populates="request_note")
 
     _json_black_list = ['request']
+
+    def validate(self):
+        self.note_type = self.note_type.strip().lower()
+        if self.note_type not in NoteType.__dict__.values():
+            raise error_collection.ValidationError(f"invalid note type, receive {self.note_type}")
+        if not self.status:
+            self.status = RequestStatus.active
+        self.status = self.status.strip()
+        if self.status not in RequestStatus.__dict__.values():
+            raise error_collection.ValidationError(f"invalid status, receive {self.status}")
+        self.note = validation.validate_medium_paragraph(self.note)
 
 
 class RequestData(Base, Serializable):
@@ -93,6 +121,21 @@ class RequestData(Base, Serializable):
 
     _json_black_list = ['request']
 
+    def validate(self):
+        if not self.status:
+            self.status = RequestStatus.active
+        self.status = self.status.strip()
+        if self.status not in RequestStatus.__dict__.values():
+            raise error_collection.ValidationError(f"invalid status, receive {self.status}")
+        if not self.name:
+            self.name = 'content'
+        self.name = validation.validate_name_without_space(self.name)
+        self.value = validation.validate_medium_paragraph(self.value)
+        if not self.data_type:
+            self.data_type = DataType.text
+        self.data_type = self.data_type.strip().lower()
+        if self.data_type not in DataType.__dict__.values():
+            raise error_collection.ValidationError(f"invalid data type, receive {self.data_type}")
 
 class RequestStakeholder(Base, Serializable):
     """user when a group or a user is cc in a request"""
@@ -105,6 +148,13 @@ class RequestStakeholder(Base, Serializable):
 
     _json_black_list = ['request']
 
+    def validate(self):
+        if not self.stakeholder_type:
+            self.stakeholder_type = StakeholderType.user
+        if self.stakeholder_type not in StakeholderType.__dict__.values():
+            raise error_collection.ValidationError(f"invalid stakeholder, receive {self.stakeholder_type}")
+        if not self.stakeholder_id or self.stakeholder_id <= 0:
+            raise error_collection.ValidationError(f"missing stakeholder id")
 
 class RequestAction(Base, Serializable):
     """RequestAction is the real action of user which can route from state to state"""
@@ -122,3 +172,10 @@ class RequestAction(Base, Serializable):
     action = relationship("Action", back_populates="request_action")
 
     _json_black_list = ['request']
+
+    def validate(self):
+        if not self.status:
+            self.status = RequestStatus.active
+        self.status = self.status.strip()
+        if self.status not in RequestStatus.__dict__.values():
+            raise error_collection.ValidationError(f"invalid status, receive {self.status}")

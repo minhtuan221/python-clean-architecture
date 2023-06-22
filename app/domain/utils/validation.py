@@ -20,7 +20,7 @@ def validate_name_without_space(name: str) -> str:
     if len(name) > 128:
         raise errors.Error('Name should not be longer than 128 characters')
     if re.match("^[a-zA-Z0-9_.-]+$", name) is None:
-        raise errors.Error('It should contain a-z, A-Z, 0-9, _, -, . without any space')
+        raise errors.Error(f'It should contain a-z, A-Z, 0-9, _, -, . without any space, receive {name}')
     return name
 
 
@@ -28,7 +28,8 @@ def validate_name(name: str) -> str:
     if len(name) > 128:
         raise errors.Error('Name should not be longer than 128 characters')
     if re.match("^[a-zA-Z0-9_. -]+$", name) is None:
-        raise errors.Error('It should contain a-z, A-Z, 0-9, _, -, ., and spaces without any leading/trailing spaces')
+        raise errors.Error(
+            f'It should contain a-z, A-Z, 0-9, _, -, ., and spaces without any leading/trailing spaces, receive {name}')
     return name
 
 
@@ -36,6 +37,13 @@ def validate_name(name: str) -> str:
 def validate_short_paragraph(paragraph: str) -> str:
     if len(paragraph) > 500:
         raise errors.Error('Paragraph should not be longer than 500 characters')
+    return paragraph.strip()
+
+
+@type_check
+def validate_medium_paragraph(paragraph: str) -> str:
+    if len(paragraph) > 4000:
+        raise errors.Error('Paragraph should not be longer than 4000 characters')
     return paragraph.strip()
 
 

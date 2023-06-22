@@ -5,6 +5,8 @@ from tests.domain.model.test_action import TestActionModel
 from tests.domain.model.test_activity import TestActivityModel
 from tests.domain.model.test_group import TestGroupModel
 from tests.domain.model.test_process import TestProcessModel
+from tests.domain.model.test_request_models import TestRequestModel, TestRequestNoteModel, \
+    TestRequestActionModel, TestRequestStakeholderModel, TestRequestDataModel
 from tests.domain.model.test_route import TestRouteModel
 from tests.domain.model.test_state import TestStateModel
 from tests.domain.model.test_target import TestTargetModel
@@ -38,4 +40,6 @@ test_cases = [
     TestTargetModel,
     TestRouteModel,
     TestGroupModel,
+    TestRequestModel, TestRequestNoteModel, TestRequestActionModel, TestRequestStakeholderModel,
+    TestRequestDataModel,
 ]

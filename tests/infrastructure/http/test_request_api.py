@@ -70,6 +70,7 @@ class TestRequestAPI:
 
         # Assert the response JSON data
         data = response.json()
+        print(data)
         request_id = data['id']
         response = client.get(f"/api/request/{request_id}")
         # Assert the response status code
