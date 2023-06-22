@@ -151,15 +151,20 @@ class TestGroupAPI:
 
         # add users to group
         response = client.post(f"/api/group/{staff_group.id}/member/{staff_1.id}", json={})
+        print('users to group', response.json())
         assert response.status_code == 200
         response = client.post(f"/api/group/{staff_group.id}/member/{staff_2.id}", json={})
+        print('users to group', response.json())
         assert response.status_code == 200
         response = client.post(f"/api/group/{staff_group.id}/member/{staff_3.id}", json={})
+        print('users to group', response.json())
         assert response.status_code == 200
 
         response = client.post(f"/api/group/{leader_group.id}/member/{leader_1.id}", json={})
+        print('users to group', response.json())
         assert response.status_code == 200
         response = client.post(f"/api/group/{leader_group.id}/member/{leader_2.id}", json={})
+        print('users to group', response.json())
         assert response.status_code == 200
 
         # Assert the response

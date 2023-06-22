@@ -1,6 +1,6 @@
 import pytest
-from app.domain.model.state import State
-from app.domain.model.state_type import StateType
+from app.domain.model.process_maker.state import State
+from app.domain.model.process_maker.state_type import StateType
 from app.domain.utils.error_collection import ValidationError
 from app.pkgs.errors import Error
 

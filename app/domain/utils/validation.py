@@ -19,7 +19,7 @@ def validate_name_without_space(name: str) -> str:
         raise errors.Error('Name should not be longer than 128 characters')
     if re.match("^[a-zA-Z0-9_.-]+$", name) is None:
         raise errors.Error('It should contain a-z, A-Z, 0-9, _, -, . without any space')
-    return name.strip()
+    return name
 
 
 def validate_name(name: str) -> str:
@@ -27,7 +27,7 @@ def validate_name(name: str) -> str:
         raise errors.Error('Name should not be longer than 128 characters')
     if re.match("^[a-zA-Z0-9_. -]+$", name) is None:
         raise errors.Error('It should contain a-z, A-Z, 0-9, _, -, ., and spaces without any leading/trailing spaces')
-    return name.strip()
+    return name
 
 
 @type_check

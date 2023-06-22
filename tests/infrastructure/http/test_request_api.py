@@ -125,6 +125,7 @@ class TestRequestAPI:
         assert response.status_code == 200
         # Assert the response JSON data
         data = response.json()
+        pprint(data)
         assert len(data['data']) == 2
 
         # Make a GET request to the endpoint

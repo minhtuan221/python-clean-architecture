@@ -35,7 +35,6 @@ class Target(Base, Serializable):
     activity = relationship("Activity", secondary='activity_target', back_populates="target")
 
     def validate(self):
-        return
         self.name = self.name.strip()
         self.description = self.description.strip()
         # more validate here

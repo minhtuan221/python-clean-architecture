@@ -124,7 +124,7 @@ class RequestService(object):
         return actions
 
     def _should_user_commit_action(self, user_id: int, action: Action) -> bool:
-        group_ids = [group.id for group in action.target]
+        group_ids = [target.group_id for target in action.target]
         for group_id in group_ids:
             if self.group_service.is_user_in_group(group_id, user_id):
                 return True

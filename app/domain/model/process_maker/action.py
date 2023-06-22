@@ -22,7 +22,6 @@ class Action(Base, Serializable):
     _json_black_list = ['route']
 
     def validate(self):
-        return
         self.name = self.name.strip()
         validation.validate_name(self.name)
         self.description = self.description.strip()

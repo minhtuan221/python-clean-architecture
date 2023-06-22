@@ -87,6 +87,7 @@ class GroupService(object):
 
     def is_user_in_group(self,group_id: int, user_id: int) -> bool:
         group_member = self.group_repo.is_user_in_group(group_id, user_id)
+        print('group_member', group_member)
         if group_member:
             return True
         return False

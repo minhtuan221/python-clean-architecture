@@ -28,7 +28,6 @@ class Process(Base, Serializable):
     _json_black_list = ['request']
 
     def validate(self):
-        return
         self.name = self.name.strip()
         self.description = self.description.strip()
         # more validate here

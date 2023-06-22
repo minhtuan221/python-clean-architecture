@@ -1,6 +1,5 @@
 import pytest
-from app.domain.model.target import Target
-from app.domain.model.target_type import TargetType
+from app.domain.model.process_maker.target import Target, TargetType
 from app.domain.utils.error_collection import ValidationError
 from app.pkgs.errors import Error
 
