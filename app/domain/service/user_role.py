@@ -22,7 +22,7 @@ class UserRoleService(object):
     def create_new_role(self, name: str, description: str):
         name = name.lower()
         description = description.lower()
-        validation.validate_name(name)
+        validation.validate_name_without_space(name)
         role = Role(name=name, description=description)
         r = self.role_repo.find_by_name(name)
         if r:
@@ -47,7 +47,7 @@ class UserRoleService(object):
     def update(self, role_id: int, name: str, description: str):
         name = name.lower()
         description = description.lower()
-        validation.validate_name(name)
+        validation.validate_name_without_space(name)
         validation.validate_short_paragraph(description)
         role = self.role_repo.find(role_id)
         role.name = name
@@ -96,7 +96,7 @@ class UserRoleService(object):
     def append_permission_to_role(self, role_id: int, permission: str):
         permission = permission.lower()
         validation.validate_id(role_id)
-        validation.validate_name(permission)
+        validation.validate_name_without_space(permission)
         role = self.role_repo.find(role_id)
         if not role:
             raise error_collection.RecordNotFound

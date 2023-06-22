@@ -1,9 +1,17 @@
+from dataclasses import dataclass
+
 from sqlalchemy import Column, String, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.domain.model import Base
 from app.domain.model._serializable import Serializable
-from app.domain.utils import validation
+from app.domain.utils import validation, error_collection
+
+
+@dataclass
+class ProcessStatus:
+    active = 'active'
+    inactive = 'inactive'
 
 
 class Process(Base, Serializable):
@@ -20,11 +28,15 @@ class Process(Base, Serializable):
     _json_black_list = ['request']
 
     def validate(self):
+        return
         self.name = self.name.strip()
         self.description = self.description.strip()
         # more validate here
-        validation.validate_name_with_space(self.name)
+        validation.validate_name(self.name)
         validation.validate_short_paragraph(self.description)
+        self.status = self.status.strip().lower()
+        if self.status not in ProcessStatus.__dict__.values():
+            raise error_collection.ValidationError('invalid status')
 
 
 class ProcessAdmin(Base):

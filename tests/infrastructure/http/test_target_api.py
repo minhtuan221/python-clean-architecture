@@ -1,3 +1,5 @@
+import pprint
+
 import pytest
 
 from app.domain.model.process_maker.target import TargetType
@@ -52,15 +54,24 @@ class TestTargetAPI:
     @pytest.mark.run(order=13)
     def test_search_target(self):
         # let make some other target to make this test more sense, also inherit the target created from previous test
-        client.post("/api/target",
+        response = client.post("/api/target",
                     json={"name": "Test Target 2", "description": "Test Description",
                           "target_type": TargetType.user, "group_id": 0})
-        client.post("/api/target",
-                    json={"name": "Not in Search result", "description": "Test Description",
+        if response.status_code != 200:
+            raise ValueError(str(response.json()))
+        assert response.status_code == 200
+        response = client.post("/api/target",
+                    json={"name": "Not in Search result 1", "description": "Test Description",
                           "target_type": TargetType.group, "group_id": 1})
-        client.post("/api/target",
-                    json={"name": "Not in Search result", "description": "Test Description",
+        if response.status_code != 200:
+            raise ValueError(str(response.json()))
+        assert response.status_code == 200
+        response = client.post("/api/target",
+                    json={"name": "Not in Search result 2", "description": "Test Description",
                           "target_type": TargetType.user, "group_id": 0})
+        if response.status_code != 200:
+            raise ValueError(str(response.json()))
+        assert response.status_code == 200
 
         # Make a GET request to the endpoint
         response = client.get("/api/target", params={"name": "Test Target"})

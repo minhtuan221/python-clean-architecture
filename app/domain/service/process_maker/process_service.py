@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from app.domain.model import Process, State, Route
+from app.domain.model.process_maker.process import ProcessStatus
 from app.domain.model.process_maker.state_type import StateType
 from app.domain.utils import error_collection, validation
 from app.infrastructure.persistence.process_maker.action import ActionRepository
@@ -29,6 +30,7 @@ class ProcessService(object):
 
     def create(self, name: str, description: str = '') -> Process:
         new_process = Process(name=name, description=description)
+        new_process.status = ProcessStatus.inactive
         new_process.validate()
 
         exist_record = self.process_repo.find_by_name(new_process.name)

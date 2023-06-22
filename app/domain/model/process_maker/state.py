@@ -5,7 +5,8 @@ from sqlalchemy.orm import relationship
 
 from app.domain.model import Base
 from app.domain.model._serializable import Serializable
-from app.domain.utils import validation
+from app.domain.model.process_maker.state_type import StateType
+from app.domain.utils import validation, error_collection
 
 
 class State(Base, Serializable):
@@ -21,6 +22,17 @@ class State(Base, Serializable):
     activity = relationship("Activity", secondary='state_activity', back_populates="state")
 
     _json_black_list = ['process']
+
+    def validate(self):
+        return
+        self.name = self.name.strip()
+        self.description = self.description.strip()
+        # more validate here
+        validation.validate_name(self.name)
+        validation.validate_short_paragraph(self.description)
+        self.state_type = self.state_type.strip().lower()
+        if self.state_type not in StateType.__dict__.values():
+            raise error_collection.ValidationError(f'invalid state_type, receive {self.state_type}')
 
 
 class StateActivity(Base, Serializable):

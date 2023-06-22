@@ -56,15 +56,18 @@ class TestActionAPI:
     @pytest.mark.run(order=test_order+3)
     def test_search_action(self):
         # let make some other action to make this test more sense, also inherit the action created from previous test
-        client.post("/api/action",
+        response = client.post("/api/action",
                     json={"name": "Test Action 2", "description": "Test Description",
                           "action_type": ActionType.reject})
-        client.post("/api/action",
-                    json={"name": "Not in Search result", "description": "Test Description",
+        assert response.status_code == 200
+        response = client.post("/api/action",
+                    json={"name": "Not in Search result 1", "description": "Test Description",
                           "action_type": ActionType.approve})
-        client.post("/api/action",
-                    json={"name": "Not in Search result", "description": "Test Description",
+        assert response.status_code == 200
+        response = client.post("/api/action",
+                    json={"name": "Not in Search result 2", "description": "Test Description",
                           "action_type": ActionType.reject})
+        assert response.status_code == 200
 
         # Make a GET request to the endpoint
         response = client.get("/api/action", params={"name": "Test Action"})

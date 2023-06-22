@@ -91,6 +91,12 @@ class DontHaveRight(Error):
     error_code: int = HttpStatusCode.Bad_Request
 
 
+@dataclass
+class ValidationError(Error):
+    message: str = 'validation failed'
+    error_code: int = HttpStatusCode.Bad_Request
+
+
 
 def test_raise_error():
     try:

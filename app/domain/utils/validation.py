@@ -7,49 +7,49 @@ special_symbol = ['$', '@', '#', '%']
 
 
 @type_check
-def validate_id(_id: int):
+def validate_id(_id: int) -> int:
     if _id > 0:
-        return None
+        return _id
     raise errors.Error('Missing ID or ID must greater than 0')
 
 
 @type_check
-def validate_name(name: str):
+def validate_name_without_space(name: str) -> str:
     if len(name) > 128:
         raise errors.Error('Name should not be longer than 128 characters')
     if re.match("^[a-zA-Z0-9_.-]+$", name) is None:
         raise errors.Error('It should contain a-z, A-Z, 0-9, _, -, . without any space')
-    return None
+    return name.strip()
 
 
-def validate_name_with_space(name: str):
+def validate_name(name: str) -> str:
     if len(name) > 128:
         raise errors.Error('Name should not be longer than 128 characters')
     if re.match("^[a-zA-Z0-9_. -]+$", name) is None:
         raise errors.Error('It should contain a-z, A-Z, 0-9, _, -, ., and spaces without any leading/trailing spaces')
-    return None
+    return name.strip()
 
 
 @type_check
-def validate_short_paragraph(paragraph: str):
+def validate_short_paragraph(paragraph: str) -> str:
     if len(paragraph) > 500:
         raise errors.Error('Paragraph should not be longer than 500 characters')
-    return None
+    return paragraph.strip()
 
 
 @type_check
-def validate_email(email: str):
+def validate_email(email: str) -> str:
     if len(email) > 128:
         raise errors.Error('email should not be longer than 128 characters')
     if re.match(
             r"^((([!#$%&'*+\-/=?^_`{|}~\w])|([!#$%&'*+\-/=?^_`{|}~\w][!#$%&'*+\-/=?^_`{|}~\.\w]{0,}[!#$%&'*+\-/=?^_`{|}~\w]))[@]\w+([-.]\w+)*\.\w+([-.]\w+)*)$",
             email) is None:
         raise errors.Error('Email validation type failed')
-    return None
+    return email
 
 
 @type_check
-def validate_password(passwd: str):
+def validate_password(passwd: str) -> str:
     if len(passwd) < 6:
         raise errors.Error('length should be at least 6')
 
@@ -68,4 +68,4 @@ def validate_password(passwd: str):
     if not any(char in special_symbol for char in passwd):
         raise errors.Error(f'Password should have at least one of the symbols {special_symbol}')
 
-    return None
+    return passwd

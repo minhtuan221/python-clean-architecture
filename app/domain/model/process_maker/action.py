@@ -3,6 +3,8 @@ from sqlalchemy.orm import relationship
 
 from app.domain.model import Base
 from app.domain.model._serializable import Serializable
+from app.domain.model.process_maker.action_type import ActionType
+from app.domain.utils import validation, error_collection
 
 
 class Action(Base, Serializable):
@@ -18,6 +20,16 @@ class Action(Base, Serializable):
     request_action = relationship("RequestAction", back_populates="action")
 
     _json_black_list = ['route']
+
+    def validate(self):
+        return
+        self.name = self.name.strip()
+        validation.validate_name(self.name)
+        self.description = self.description.strip()
+        validation.validate_short_paragraph(self.description)
+        self.action_type = self.action_type.strip().lower()
+        if self.action_type not in ActionType.__dict__.values():
+            raise error_collection.ValidationError(f'invalid action type, receive {self.action_type}')
 
     def get_route(self) -> 'Route':
         return self.route

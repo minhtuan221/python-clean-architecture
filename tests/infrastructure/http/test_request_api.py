@@ -17,6 +17,16 @@ from app.pkgs.cache_tools import cache
 
 class TestRequestAPI:
 
+    @pytest.fixture(autouse=True)
+    def setup_teardown(self):
+        # Setup logic before each test
+        connection_pool.open_session()
+
+        # Teardown logic after each test
+        yield
+
+        connection_pool.close_session()
+
     @pytest.fixture
     def staff_1(self):
         # staff_1@test_mail.com from previous test_process_api
@@ -54,6 +64,8 @@ class TestRequestAPI:
                                })
 
         # Assert the response status code
+        if response.status_code != 200:
+            print(response.json())
         assert response.status_code == 200
 
         # Assert the response JSON data
@@ -139,19 +151,28 @@ class TestRequestAPI:
     @pytest.mark.run(order=44)
     def test_staff_edit_request_before_raise(self, staff_1, test_new_request):
         # find the action
-        connection_pool.open_session()
         edit_act = action_service.find_one_by_name('edit request')
 
         request = request_service.user_commit_action(test_new_request.id, staff_1.id, edit_act.id)
         data = request.to_json()
-        connection_pool.close_session()
         assert data['request_action'][0]['action_id'] == edit_act.id
+
+    @pytest.mark.run(order=44)
+    def test_staff_cancel_request_before_raise(self, staff_1, test_raise_request):
+        # find the action
+        cancel_act = action_service.find_one_by_name('cancel request')
+
+        request = request_service.user_commit_action(test_raise_request.id, staff_1.id, cancel_act.id)
+        data = request.to_json()
+        assert data['request_action'][1]['action_id'] == cancel_act.id
 
     @pytest.fixture
     @pytest.mark.run(order=45)
     def test_raise_request(self, staff_1, leader_1, test_new_request):
         response = client.get(f"/api/request/{test_new_request.id}")
         # Assert the response status code
+        if response.status_code != 200:
+            raise ValueError(str(response.json()))
         data = response.json()
 
         assert data['current_state']['name'] == 'start point'
@@ -164,10 +185,14 @@ class TestRequestAPI:
                                json={})
 
         # Assert the response status code
+        if response.status_code != 200:
+            raise ValueError(str(response.json()))
         assert response.status_code == 200
         # Make a GET request to the endpoint
         response = client.get(f"/api/request/{test_new_request.id}")
         # Assert the response status code
+        if response.status_code != 200:
+            raise ValueError(str(response.json()))
         data = response.json()
         assert data['current_state']['name'] == 'request for approve'
         assert data['request_action'][0]['status'] == 'done'
@@ -177,12 +202,10 @@ class TestRequestAPI:
     @pytest.mark.run(order=46)
     def test_staff_cannot_edit_after_raise(self, staff_1, test_raise_request):
         client.token = staff_1.token
-        connection_pool.open_session()
         edit_act = action_service.find_one_by_name('edit request')
         with pytest.raises(error_collection.DontHaveRight):
             request = request_service.user_commit_action(test_raise_request.id, staff_1.id,
                                                          edit_act.id)
-        connection_pool.close_session()
 
     @pytest.mark.run(order=46)
     def test_approve_request(self, staff_1, leader_1, test_raise_request):
@@ -192,6 +215,8 @@ class TestRequestAPI:
         # Make a POST request to the endpoint
         response = client.post(f"/api/request/{test_raise_request.id}/action/{approve_act.id}",
                                json={})
+        if response.status_code != 200:
+            raise ValueError(str(response.json()))
 
         data = response.json()
         # Assert the response status code
@@ -199,6 +224,8 @@ class TestRequestAPI:
         # Make a GET request to the endpoint
         response = client.get(f"/api/request/{test_raise_request.id}")
         # Assert the response status code
+        if response.status_code != 200:
+            raise ValueError(str(response.json()))
         data = response.json()
         assert data['current_state']['name'] == 'done'
         assert data['current_state']['state_type'] == 'complete'
@@ -215,14 +242,17 @@ class TestRequestAPI:
         # Make a POST request to the endpoint
         response = client.post(f"/api/request/{test_raise_request.id}/action/{deny_act.id}",
                                json={})
+        if response.status_code != 200:
+            raise ValueError(str(response.json()))
 
         data = response.json()
-        pprint(data)
         # Assert the response status code
         assert response.status_code == 200
         # Make a GET request to the endpoint
         response = client.get(f"/api/request/{test_raise_request.id}")
         # Assert the response status code
+        if response.status_code != 200:
+            raise ValueError(str(response.json()))
         data = response.json()
         assert data['current_state']['name'] == 'denied'
         assert data['current_state']['state_type'] == 'complete'
@@ -239,14 +269,17 @@ class TestRequestAPI:
         # Make a POST request to the endpoint
         response = client.post(f"/api/request/{test_raise_request.id}/action/{reject_act.id}",
                                json={})
+        if response.status_code != 200:
+            raise ValueError(str(response.json()))
 
         data = response.json()
-        pprint(data)
         # Assert the response status code
         assert response.status_code == 200
         # Make a GET request to the endpoint
         response = client.get(f"/api/request/{test_raise_request.id}")
         # Assert the response status code
+        if response.status_code != 200:
+            raise ValueError(str(response.json()))
         data = response.json()
         assert data['current_state']['name'] == 'start point'
         assert data['current_state']['state_type'] == 'start'
