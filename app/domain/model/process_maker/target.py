@@ -46,7 +46,7 @@ class Target(Base, Serializable):
         if self.target_type not in TargetType.__dict__.values():
             raise error_collection.ValidationError(f'invalid target_type, receive {self.target_type}')
         self.group_id = int(self.group_id)
-        if self.group_id < 0:
+        if self.group_id <= 0:
             # group_id can be 0 it the action/activity have no target
             raise error_collection.ValidationError(f'invalid group id, receive {self.group_id}')
 

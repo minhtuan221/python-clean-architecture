@@ -8,6 +8,8 @@ special_symbol = ['$', '@', '#', '%']
 
 @type_check
 def validate_id(_id: int) -> int:
+    if _id is None:
+        raise ValueError(f'ID should not be {_id}')
     if _id > 0:
         return _id
     raise errors.Error('Missing ID or ID must greater than 0')

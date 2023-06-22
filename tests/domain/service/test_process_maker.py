@@ -2,6 +2,7 @@ from pprint import pprint
 
 import pytest
 
+from app.cmd.center_store import connection_pool
 from app.domain.model import Process
 from app.domain.model.process_maker.state_type import StateType
 from app.infrastructure.factory_bot.process_maker import create_work_flow
@@ -9,6 +10,16 @@ from app.infrastructure.http.fastapi_adapter.process_maker.process import proces
 
 
 class TestProcessMakerService:
+
+    @pytest.fixture(autouse=True)
+    def setup_teardown(self):
+        # Setup logic before each test
+        connection_pool.open_session()
+
+        # Teardown logic after each test
+        yield
+
+        connection_pool.close_session()
 
     @pytest.fixture()
     def test_process(self) -> Process:

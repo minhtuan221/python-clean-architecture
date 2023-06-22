@@ -70,7 +70,7 @@ class FastAPIMiddleware(object):
                 return JSONResponse(content=e.to_json(), status_code=e.code())
             except Exception as e:
                 db_session.rollback()
-                self.logger.error(e)
+                self.logger.error(e, exc_info=e)
                 return JSONResponse(content=dict(data=None, error=f'Unknown error: {str(e)}'),
                                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
             finally:

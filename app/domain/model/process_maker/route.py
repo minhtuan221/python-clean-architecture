@@ -1,6 +1,4 @@
-import datetime
-from typing import Optional
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.domain.model import Base
@@ -21,6 +19,10 @@ class Route(Base, Serializable):
     activity = relationship("Activity", secondary='route_activity', back_populates="route")
 
     _json_black_list = ['process', 'current_state']
+
+    def validate(self):
+        validation.validate_id(self.process_id)
+        validation.validate_id(self.current_state_id)
 
 
 class RouteAction(Base, Serializable):

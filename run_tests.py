@@ -3,7 +3,9 @@ import pytest
 from app.infrastructure.factory_bot.setup_test import setup_before_tests
 from tests.domain.model.test_action import TestActionModel
 from tests.domain.model.test_activity import TestActivityModel
+from tests.domain.model.test_group import TestGroupModel
 from tests.domain.model.test_process import TestProcessModel
+from tests.domain.model.test_route import TestRouteModel
 from tests.domain.model.test_state import TestStateModel
 from tests.domain.model.test_target import TestTargetModel
 from tests.domain.service.test_process_maker import TestProcessMakerService
@@ -34,4 +36,6 @@ test_cases = [
     TestProcessModel,
     TestStateModel,
     TestTargetModel,
+    TestRouteModel,
+    TestGroupModel,
 ]

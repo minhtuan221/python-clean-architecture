@@ -56,7 +56,7 @@ class TestTargetAPI:
         # let make some other target to make this test more sense, also inherit the target created from previous test
         response = client.post("/api/target",
                     json={"name": "Test Target 2", "description": "Test Description",
-                          "target_type": TargetType.user, "group_id": 0})
+                          "target_type": TargetType.user, "group_id": 1})
         if response.status_code != 200:
             raise ValueError(str(response.json()))
         assert response.status_code == 200
@@ -68,7 +68,7 @@ class TestTargetAPI:
         assert response.status_code == 200
         response = client.post("/api/target",
                     json={"name": "Not in Search result 2", "description": "Test Description",
-                          "target_type": TargetType.user, "group_id": 0})
+                          "target_type": TargetType.user, "group_id": 1})
         if response.status_code != 200:
             raise ValueError(str(response.json()))
         assert response.status_code == 200

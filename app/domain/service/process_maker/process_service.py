@@ -149,6 +149,7 @@ class ProcessService(object):
         current_state = self.find_state_on_process(process_id, current_state_id)
         route = Route(process_id=process_id)
         route.current_state = current_state
+        route.current_state_id = current_state.id
         if next_state_id:
             next_state = self.find_state_on_process(process_id, next_state_id)
             route.next_state_id = next_state.id

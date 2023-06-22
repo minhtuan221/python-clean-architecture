@@ -159,18 +159,21 @@ class TestProcessAPI:
         assert data['state_type'] == 'start'
 
         # add more state for further testing
-        client.post(f"/api/process/{process.id}/state",
+        response = client.post(f"/api/process/{process.id}/state",
                     json={"name": "request for approve",
                           "description": "Test Description",
                           'state_type': StateType.normal})
-        client.post(f"/api/process/{process.id}/state",
+        assert response.status_code == 200
+        response = client.post(f"/api/process/{process.id}/state",
                     json={"name": "done",
                           "description": "Test Description",
                           'state_type': StateType.complete})
-        client.post(f"/api/process/{process.id}/state",
+        assert response.status_code == 200
+        response = client.post(f"/api/process/{process.id}/state",
                     json={"name": "denied",
                           "description": "Test Description",
                           'state_type': StateType.complete})
+        assert response.status_code == 200
 
     @pytest.mark.run(order=37)
     def test_add_route_to_process(self):
