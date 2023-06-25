@@ -42,7 +42,7 @@ async def create_new_process(request: Request, process: ProcessReq):
 @middleware.error_handler
 @middleware.require_permissions()
 async def find_one_process(request: Request, _id: int):
-    p = process_service.find_one(_id)
+    p = process_service.find_one(_id, with_children=True)
     return p.to_json()
 
 

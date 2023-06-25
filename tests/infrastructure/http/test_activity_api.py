@@ -1,6 +1,7 @@
 import pytest
 
 from app.domain.model.process_maker.activity_type import ActivityType
+from app.infrastructure.factory_bot.setup_test import counter
 from app.infrastructure.http.fastapi_adapter.process_maker.target import target_service
 from app.pkgs.api_client import client
 from app.infrastructure.http.fastapi_adapter.process_maker.activity import activity_service
@@ -10,7 +11,7 @@ test_order = 20
 
 class TestActivityAPI:
 
-    @pytest.mark.run(order=test_order+1)
+    @pytest.mark.run(order=counter.inc())
     def test_create_new_activity(self):
         # Make a POST request to the endpoint
         response = client.post("/api/activity",
@@ -33,7 +34,7 @@ class TestActivityAPI:
         assert data["description"] == "Test Description"
         assert data["activity_type"] == ActivityType.add_note
 
-    @pytest.mark.run(order=test_order+2)
+    @pytest.mark.run(order=counter.inc())
     def test_find_one_activity(self):
         # find the activity in the previous test
         activity = activity_service.find_one_by_name("Test Activity")
@@ -57,7 +58,7 @@ class TestActivityAPI:
         assert data["description"] == "Test Description"
         assert data["activity_type"] == ActivityType.add_note
 
-    @pytest.mark.run(order=test_order+3)
+    @pytest.mark.run(order=counter.inc())
     def test_search_activity(self):
         # let's make some other activities to make this test more meaningful,
         # also inherit the activity created from the previous test
@@ -88,7 +89,7 @@ class TestActivityAPI:
         assert data["page"] == 1
         assert data["page_size"] == 10
 
-    @pytest.mark.run(order=test_order+4)
+    @pytest.mark.run(order=counter.inc())
     def test_update_activity(self):
         # find the activity in the previous test
         activity = activity_service.find_one_by_name("Test Activity 2")
@@ -123,7 +124,7 @@ class TestActivityAPI:
         assert "error" in data
         assert "data" in data
 
-    @pytest.mark.run(order=test_order+5)
+    @pytest.mark.run(order=counter.inc())
     def test_delete_activity(self):
         # create an activity to delete
         response = client.post("/api/activity",
@@ -151,8 +152,8 @@ class TestActivityAPI:
         assert data["activity_type"] == ActivityType.send_email
         assert data["deleted_at"] is not None
 
-    @pytest.mark.run(order=test_order + 6)
-    def test_create_activity_for_process(self):
+    @pytest.mark.run(order=counter.inc())
+    def test_create_activity_for_completed_process(self):
         response = client.post("/api/activity",
                                json={"name": "add note when edit",
                                      "description": "add note if change request information",

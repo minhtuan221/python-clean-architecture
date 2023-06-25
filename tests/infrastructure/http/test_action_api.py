@@ -3,6 +3,7 @@ import pprint
 import pytest
 
 from app.domain.model.process_maker.action_type import ActionType
+from app.infrastructure.factory_bot.setup_test import counter
 from app.infrastructure.http.fastapi_adapter.process_maker.action import action_service
 from app.infrastructure.http.fastapi_adapter.process_maker.target import target_service
 from app.pkgs.api_client import client
@@ -12,7 +13,7 @@ test_order = 20
 
 class TestActionAPI:
 
-    @pytest.mark.run(order=test_order+1)
+    @pytest.mark.run(order=counter.inc())
     def test_create_new_action(self):
         # Make a POST request to the endpoint
         response = client.post("/api/action",
@@ -32,7 +33,7 @@ class TestActionAPI:
         # You can also assert against specific values if needed
         assert data["name"] == "Test Action"
 
-    @pytest.mark.run(order=test_order+2)
+    @pytest.mark.run(order=counter.inc())
     def test_find_one_action(self):
         # find the action in previous test
         action = action_service.find_one_by_name("Test Action")
@@ -53,7 +54,7 @@ class TestActionAPI:
         # You can also assert against specific values if needed
         assert data["name"] == "Test Action"
 
-    @pytest.mark.run(order=test_order+3)
+    @pytest.mark.run(order=counter.inc())
     def test_search_action(self):
         # let make some other action to make this test more sense, also inherit the action created from previous test
         response = client.post("/api/action",
@@ -86,7 +87,7 @@ class TestActionAPI:
         assert data["page"] == 1
         assert data["page_size"] == 10
 
-    @pytest.mark.run(order=test_order+4)
+    @pytest.mark.run(order=counter.inc())
     def test_update_action(self):
         # find the action in previous test
         action = action_service.find_one_by_name("Test Action 2")
@@ -118,7 +119,7 @@ class TestActionAPI:
         assert "error" in data
         assert "data" in data
 
-    @pytest.mark.run(order=test_order+5)
+    @pytest.mark.run(order=counter.inc())
     def test_delete_action(self):
         # create an action to delete
         response = client.post("/api/action",
@@ -143,8 +144,8 @@ class TestActionAPI:
         assert data["name"] == "deleted action"
         assert data["deleted_at"] is not None
 
-    @pytest.mark.run(order=test_order + 6)
-    def test_create_action_for_process(self):
+    @pytest.mark.run(order=counter.inc())
+    def test_create_action_for_completed_process(self):
         response = client.post("/api/action",
                                json={"name": "edit request", "description": "change request information",
                                      "action_type": ActionType.edit})

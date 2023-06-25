@@ -13,12 +13,6 @@ from tests.domain.model.test_target import TestTargetModel
 from tests.domain.service.test_process_maker import TestProcessMakerService
 from tests.domain.service.test_user import TestUserService
 from tests.domain.service.test_user_role import TestUserRoleService
-from tests.infrastructure.http.test_action_api import TestActionAPI
-from tests.infrastructure.http.test_activity_api import TestActivityAPI
-from tests.infrastructure.http.test_group_api import TestGroupAPI
-from tests.infrastructure.http.test_process_api import TestProcessAPI
-from tests.infrastructure.http.test_request_api import TestRequestAPI
-from tests.infrastructure.http.test_target_api import TestTargetAPI
 from tests.pkgs.test_injector import TestContainer
 
 test_cases = [
@@ -27,12 +21,6 @@ test_cases = [
     TestUserRoleService,
     TestUserService,
     TestProcessMakerService,
-    TestGroupAPI,
-    TestTargetAPI,
-    TestActionAPI,
-    TestActivityAPI,
-    TestProcessAPI,
-    TestRequestAPI,
     TestActivityModel,
     TestActionModel,
     TestProcessModel,
@@ -42,4 +30,21 @@ test_cases = [
     TestGroupModel,
     TestRequestModel, TestRequestNoteModel, TestRequestActionModel, TestRequestStakeholderModel,
     TestRequestDataModel,
+]
+
+# test by orders. Do not change the order of import
+from tests.infrastructure.http.test_group_api import TestGroupAPI
+from tests.infrastructure.http.test_target_api import TestTargetAPI
+from tests.infrastructure.http.test_action_api import TestActionAPI
+from tests.infrastructure.http.test_activity_api import TestActivityAPI
+from tests.infrastructure.http.test_process_api import TestProcessAPI
+from tests.infrastructure.http.test_request_api import TestRequestAPI
+
+ordered_test_cases = [
+    TestGroupAPI,
+    TestTargetAPI,
+    TestActionAPI,
+    TestActivityAPI,
+    TestProcessAPI,
+    TestRequestAPI,
 ]

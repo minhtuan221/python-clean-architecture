@@ -2,6 +2,7 @@ import pytest
 
 from app.cmd.center_store import container
 from app.domain.model import ConnectionPool
+from app.pkgs.atomic_counter import AtomicInteger
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -21,3 +22,4 @@ def setup_before_tests():
     # You can perform any necessary teardown or cleanup here
 
 
+counter = AtomicInteger(0)

@@ -65,6 +65,7 @@ class StateRepository(object):
             state: State = self.find_one(state_id)
             if not state:
                 return state
+            state.process_id = None
             state.deleted_at = datetime.now()
             db.session.add(state)
         return state

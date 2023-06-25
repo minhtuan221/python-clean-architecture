@@ -1,6 +1,6 @@
-import datetime
-from typing import Optional, List
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
+from typing import List
+
+from sqlalchemy import Column, String, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.domain.model import Base, Route
@@ -29,12 +29,11 @@ class RequestStatus:
     done = 'done'
 
 
-
 class Request(Base, Serializable):
     """
     Entity model default is ''.
     - If it's a deal, entity_model'll be 'deal', entity_id'll be deal_id
-    - if it's empty (''), that mean no model and request data can be anything
+    - if it's empty '', that mean no model and request data can be anything
     """
     __tablename__ = 'request'
     id: int = Column(Integer, primary_key=True)
@@ -136,6 +135,7 @@ class RequestData(Base, Serializable):
         self.data_type = self.data_type.strip().lower()
         if self.data_type not in DataType.__dict__.values():
             raise error_collection.ValidationError(f"invalid data type, receive {self.data_type}")
+
 
 class RequestStakeholder(Base, Serializable):
     """user when a group or a user is cc in a request"""

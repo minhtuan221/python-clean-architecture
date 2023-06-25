@@ -1,9 +1,7 @@
-import json
-from pprint import pprint
-
 import pytest
 
 from app.domain.model.process_maker.state_type import StateType
+from app.infrastructure.factory_bot.setup_test import counter
 from app.infrastructure.http.fastapi_adapter.process_maker.action import action_service
 from app.infrastructure.http.fastapi_adapter.process_maker.activity import activity_service
 from app.pkgs.api_client import client
@@ -12,11 +10,12 @@ from app.infrastructure.http.fastapi_adapter.process_maker.process import proces
 
 class TestProcessAPI:
 
-    @pytest.mark.run(order=31)
+    @pytest.fixture
+    @pytest.mark.run(order=counter.inc())
     def test_create_new_process(self):
         # Make a POST request to the endpoint
         response = client.post("/api/process",
-                               json={"name": "Test Process Workflow", "description": "Test Description"})
+                               json={"name": "Test Process 1", "description": "Test Description"})
 
         # Assert the response status code
         assert response.status_code == 200
@@ -29,15 +28,14 @@ class TestProcessAPI:
         assert "updated_at" in data
 
         # You can also assert against specific values if needed
-        assert data["name"] == "Test Process Workflow"
+        assert data["name"] == "Test Process 1"
+        yield data['id']
 
-    @pytest.mark.run(order=32)
-    def test_find_one_process(self):
-        # find the process in previous test
-        processes = process_service.search("Test Process Workflow")
+    @pytest.mark.run(order=counter.inc())
+    def test_find_one_process(self, test_create_new_process):
 
         # Make a GET request to the endpoint
-        response = client.get(f"/api/process/{processes[0].id}")
+        response = client.get(f"/api/process/{test_create_new_process}")
 
         # Assert the response status code
         assert response.status_code == 200
@@ -50,9 +48,9 @@ class TestProcessAPI:
         assert "updated_at" in data
 
         # You can also assert against specific values if needed
-        assert data["name"] == "Test Process Workflow"
+        assert data["name"] == "Test Process 1"
 
-    @pytest.mark.run(order=33)
+    @pytest.mark.run(order=counter.inc())
     def test_search_process(self):
         # let make some other process to make this test more sense, also inherit the process created from previous test
         client.post("/api/process",
@@ -79,7 +77,7 @@ class TestProcessAPI:
         assert data["page"] == 1
         assert data["page_size"] == 10
 
-    @pytest.mark.run(order=34)
+    @pytest.mark.run(order=counter.inc())
     def test_update_process(self):
         # find the process in previous test
         process = process_service.find_one_by_name("Test Process 2")
@@ -109,7 +107,7 @@ class TestProcessAPI:
         assert "error" in data
         assert "data" in data
 
-    @pytest.mark.run(order=35)
+    @pytest.mark.run(order=counter.inc())
     def test_delete_process(self):
         # create a process to delete
         response = client.post("/api/process",
@@ -133,8 +131,28 @@ class TestProcessAPI:
         assert data["name"] == "deleted process"
         assert data["deleted_at"] is not None
 
-    @pytest.mark.run(order=36)
-    def test_add_state_to_process(self):
+    @pytest.mark.run(order=counter.inc())
+    def test_create_completed_process(self):
+        # Make a POST request to the endpoint
+        response = client.post("/api/process",
+                               json={"name": "Test Process Workflow",
+                                     "description": "Test Description"})
+
+        # Assert the response status code
+        assert response.status_code == 200
+
+        # Assert the response JSON data
+        data = response.json()
+        assert "name" in data
+        assert "description" in data
+        assert "created_at" in data
+        assert "updated_at" in data
+
+        # You can also assert against specific values if needed
+        assert data["name"] == "Test Process Workflow"
+
+    @pytest.mark.run(order=counter.inc())
+    def test_add_state_to_completed_process(self):
         # get Test Process from previous test
         process = process_service.find_one_by_name("Test Process Workflow")
 
@@ -175,8 +193,8 @@ class TestProcessAPI:
                           'state_type': StateType.complete})
         assert response.status_code == 200
 
-    @pytest.mark.run(order=37)
-    def test_add_route_to_process(self):
+    @pytest.mark.run(order=counter.inc())
+    def test_add_route_to_completed_process(self):
         # get Test Process from previous test
         process = process_service.find_one_by_name("Test Process Workflow")
 

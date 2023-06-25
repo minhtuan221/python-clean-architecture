@@ -2,6 +2,7 @@ from pprint import pprint
 
 import pytest
 
+from app.infrastructure.factory_bot.setup_test import counter
 from app.infrastructure.factory_bot.user import create_or_get_normal_user
 from app.infrastructure.http.fastapi_adapter.group import group_service
 from app.pkgs.api_client import client
@@ -9,7 +10,7 @@ from app.pkgs.api_client import client
 
 class TestGroupAPI:
 
-    @pytest.mark.run(order=1)
+    @pytest.mark.run(order=counter.inc())
     def test_create_new_group(self):
         # Make a POST request to the endpoint
         response = client.post("/api/group",
@@ -28,7 +29,7 @@ class TestGroupAPI:
         # You can also assert against specific values if needed
         assert data["name"] == "Test Group"
 
-    @pytest.mark.run(order=2)
+    @pytest.mark.run(order=counter.inc())
     def test_find_one_group(self):
         # find the group in previous test
         group = group_service.find_one_by_name("Test Group")
@@ -49,7 +50,7 @@ class TestGroupAPI:
         # You can also assert against specific values if needed
         assert data["name"] == "Test Group"
 
-    @pytest.mark.run(order=3)
+    @pytest.mark.run(order=counter.inc())
     def test_search_group(self):
         # let make some other groups to make this test more sense, also inherit the group created from previous test
         client.post("/api/group",
@@ -76,7 +77,7 @@ class TestGroupAPI:
         assert data["page"] == 1
         assert data["page_size"] == 10
 
-    @pytest.mark.run(order=4)
+    @pytest.mark.run(order=counter.inc())
     def test_update_group(self):
         # find the group in previous test
         group = group_service.find_one_by_name("Test Group 2")
@@ -106,7 +107,7 @@ class TestGroupAPI:
         assert "error" in data
         assert "data" in data
 
-    @pytest.mark.run(order=5)
+    @pytest.mark.run(order=counter.inc())
     def test_delete_group(self):
         # create a group to delete
         response = client.post("/api/group",
@@ -130,7 +131,7 @@ class TestGroupAPI:
         assert data["name"] == "deleted group"
         assert data["deleted_at"] is not None
 
-    @pytest.mark.run(order=6)
+    @pytest.mark.run(order=counter.inc())
     def test_add_user_to_group(self):
         # create more group for testing process
         client.post("/api/group",
@@ -151,20 +152,15 @@ class TestGroupAPI:
 
         # add users to group
         response = client.post(f"/api/group/{staff_group.id}/member/{staff_1.id}", json={})
-        print('users to group', response.json())
         assert response.status_code == 200
         response = client.post(f"/api/group/{staff_group.id}/member/{staff_2.id}", json={})
-        print('users to group', response.json())
         assert response.status_code == 200
         response = client.post(f"/api/group/{staff_group.id}/member/{staff_3.id}", json={})
-        print('users to group', response.json())
         assert response.status_code == 200
 
         response = client.post(f"/api/group/{leader_group.id}/member/{leader_1.id}", json={})
-        print('users to group', response.json())
         assert response.status_code == 200
         response = client.post(f"/api/group/{leader_group.id}/member/{leader_2.id}", json={})
-        print('users to group', response.json())
         assert response.status_code == 200
 
         # Assert the response
@@ -186,7 +182,7 @@ class TestGroupAPI:
         updated_group = group_service.find_one(staff_group.id)
         assert len(updated_group.member) == 3
 
-    @pytest.mark.run(order=7)
+    @pytest.mark.run(order=counter.inc())
     def test_remove_user_from_group(self):
         removal_member = create_or_get_normal_user('removal_member@test_mail.com')
 

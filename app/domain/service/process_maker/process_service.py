@@ -38,7 +38,7 @@ class ProcessService(object):
             raise error_collection.RecordAlreadyExist(f'name ({name}) already exist')
         return self.process_repo.create(new_process)
 
-    def find_one(self, process_id: int, with_children: bool=True) -> Process:
+    def find_one(self, process_id: int, with_children: bool = False) -> Process:
         validation.validate_id(process_id)
         if with_children:
             process = self.process_repo.get_children_by_process_id(process_id)
@@ -102,7 +102,7 @@ class ProcessService(object):
         return state
 
     def find_start_point(self, process_id: int) -> State:
-        return self.find_state_by_type(process_id,state_type=StateType.start)
+        return self.find_state_by_type(process_id, state_type=StateType.start)
 
     def find_state_by_type(self, process_id: int, state_type: str) -> State:
         list_state = self.state_repo.search(process_id=process_id, page_size=2000)
@@ -146,7 +146,10 @@ class ProcessService(object):
     # route service
     def add_route_to_process(self, process_id: int, current_state_id: int,
                              next_state_id: int = 0) -> Route:
+        process = self.find_one(process_id)
         current_state = self.find_state_on_process(process_id, current_state_id)
+        # find duplicate route, allow one route from state to state only
+        self.check_duplicate_route(process.id, current_state_id, next_state_id)
         route = Route(process_id=process_id)
         route.current_state = current_state
         route.current_state_id = current_state.id
@@ -155,6 +158,11 @@ class ProcessService(object):
             route.next_state_id = next_state.id
         route.validate()
         return self.route_repo.create(route)
+
+    def check_duplicate_route(self, process_id: int, current_state_id: int, next_state_id: int):
+        dup_route = self.route_repo.find_for_duplication(process_id, current_state_id, next_state_id)
+        if dup_route:
+            raise error_collection.RecordAlreadyExist('the route already exist')
 
     def find_route_on_process(self, process_id: int, route_id: int) -> Route:
         route = self.route_repo.find_by_parent(process_id, route_id)

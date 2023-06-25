@@ -64,7 +64,7 @@ class TestProcessMakerService:
         route_approve_to_start = process_service.add_route_to_process(test_process.id,
                                                                       state_approve.id,
                                                                       state_start.id)
-        test_process_json = process_service.find_one(test_process.id).to_json()
+        test_process_json = process_service.find_one(test_process.id, with_children=True).to_json()
         states = test_process_json['state']
 
         assert states[0]['name'] == state_start.name

@@ -6,6 +6,7 @@ import pytest
 from app.cmd.center_store import connection_pool
 from app.domain.model.process_maker.state_type import StateType
 from app.domain.utils import error_collection
+from app.infrastructure.factory_bot.setup_test import counter
 from app.infrastructure.factory_bot.user import create_or_get_normal_user
 from app.infrastructure.http.fastapi_adapter.process_maker.action import action_service
 from app.infrastructure.http.fastapi_adapter.process_maker.activity import activity_service
@@ -48,7 +49,7 @@ class TestRequestAPI:
         return process_service.find_one_by_name("Test Process Workflow")
 
     @pytest.fixture
-    @pytest.mark.run(order=41)
+    @pytest.mark.run(order=counter.inc())
     def test_new_request(self, staff_1, staff_2, leader_1, completed_process):
         # Make a POST request to the endpoint
         response = client.post("/api/request",
@@ -70,7 +71,6 @@ class TestRequestAPI:
 
         # Assert the response JSON data
         data = response.json()
-        print(data)
         request_id = data['id']
         response = client.get(f"/api/request/{request_id}")
         # Assert the response status code
@@ -85,7 +85,7 @@ class TestRequestAPI:
 
         yield request_service.find_one_request(data['id'])
 
-    @pytest.mark.run(order=42)
+    @pytest.mark.run(order=counter.inc())
     def test_find_one_request(self, staff_1, test_new_request):
         # Make a GET request to the endpoint
         response = client.get(f"/api/request/{test_new_request.id}")
@@ -106,7 +106,7 @@ class TestRequestAPI:
         assert data["current_state"]["state_type"] == StateType.start
         assert len(data['request_stakeholder']) == 3
 
-    @pytest.mark.run(order=43)
+    @pytest.mark.run(order=counter.inc())
     def test_find_request_allow_action(self, test_new_request):
         # Make a GET request to the endpoint
         response = client.get(f"/api/request/{test_new_request.id}/allowed_action")
@@ -118,7 +118,7 @@ class TestRequestAPI:
         actions_name.sort()
         assert actions_name == ['edit request', 'raise request']
 
-    @pytest.mark.run(order=43)
+    @pytest.mark.run(order=counter.inc())
     def test_find_request_allow_action_for_specific_user(self, test_new_request, staff_1, leader_1):
         # Make a GET request to the endpoint
         response = client.get(f"/api/request/{test_new_request.id}/allowed_action/{staff_1.id}")
@@ -126,7 +126,6 @@ class TestRequestAPI:
         assert response.status_code == 200
         # Assert the response JSON data
         data = response.json()
-        pprint(data)
         assert len(data['data']) == 2
 
         # Make a GET request to the endpoint
@@ -137,7 +136,7 @@ class TestRequestAPI:
         data = response.json()
         assert len(data['data']) == 0
 
-    @pytest.mark.run(order=44)
+    @pytest.mark.run(order=counter.inc())
     def test_staff_commit_approve_action_failed(self, staff_1, test_new_request):
         # find the action
         approve_act = action_service.find_one_by_name('approve request')
@@ -150,7 +149,7 @@ class TestRequestAPI:
         assert response.status_code == 400
         assert data['error'].endswith('do not have right to commit this action')
 
-    @pytest.mark.run(order=44)
+    @pytest.mark.run(order=counter.inc())
     def test_staff_edit_request_before_raise(self, staff_1, test_new_request):
         # find the action
         edit_act = action_service.find_one_by_name('edit request')
@@ -159,7 +158,7 @@ class TestRequestAPI:
         data = request.to_json()
         assert data['request_action'][0]['action_id'] == edit_act.id
 
-    @pytest.mark.run(order=44)
+    @pytest.mark.run(order=counter.inc())
     def test_staff_cancel_request_before_raise(self, staff_1, test_raise_request):
         # find the action
         cancel_act = action_service.find_one_by_name('cancel request')
@@ -169,7 +168,7 @@ class TestRequestAPI:
         assert data['request_action'][1]['action_id'] == cancel_act.id
 
     @pytest.fixture
-    @pytest.mark.run(order=45)
+    @pytest.mark.run(order=counter.inc())
     def test_raise_request(self, staff_1, leader_1, test_new_request):
         response = client.get(f"/api/request/{test_new_request.id}")
         # Assert the response status code
@@ -201,7 +200,7 @@ class TestRequestAPI:
         assert data['request_action'][0]['action']['name'] == 'raise request'
         yield request_service.find_one_request(data['id'])
 
-    @pytest.mark.run(order=46)
+    @pytest.mark.run(order=counter.inc())
     def test_staff_cannot_edit_after_raise(self, staff_1, test_raise_request):
         client.token = staff_1.token
         edit_act = action_service.find_one_by_name('edit request')
@@ -209,7 +208,7 @@ class TestRequestAPI:
             request = request_service.user_commit_action(test_raise_request.id, staff_1.id,
                                                          edit_act.id)
 
-    @pytest.mark.run(order=46)
+    @pytest.mark.run(order=counter.inc())
     def test_approve_request(self, staff_1, leader_1, test_raise_request):
         client.token = leader_1.token
         # find the action
@@ -236,7 +235,7 @@ class TestRequestAPI:
         assert data['request_action'][1]['status'] == 'done'
         assert data['request_action'][1]['action']['name'] == 'approve request'
 
-    @pytest.mark.run(order=46)
+    @pytest.mark.run(order=counter.inc())
     def test_deny_request(self, staff_1, leader_1, test_raise_request):
         client.token = leader_1.token
         # find the action
@@ -263,7 +262,7 @@ class TestRequestAPI:
         assert data['request_action'][1]['status'] == 'done'
         assert data['request_action'][1]['action']['name'] == 'deny request'
 
-    @pytest.mark.run(order=46)
+    @pytest.mark.run(order=counter.inc())
     def test_reject_request(self, staff_1, leader_1, test_raise_request):
         client.token = leader_1.token
         # find the action

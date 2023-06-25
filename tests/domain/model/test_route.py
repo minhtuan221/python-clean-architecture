@@ -21,6 +21,12 @@ class TestRouteModel:
         assert new_route.process_id == 1
         assert new_route.current_state_id == 1
 
+    def test_validate_with_null_next_state(self, new_route):
+        new_route.next_state_id = None
+        new_route.validate()
+        assert new_route.process_id == 1
+        assert new_route.next_state_id == None
+
     def test_validate_process_id(self, new_route):
         new_route.process_id = -1
         with pytest.raises(Error):
@@ -28,5 +34,10 @@ class TestRouteModel:
 
     def test_validate_current_state_id(self, new_route):
         new_route.current_state_id = 0
+        with pytest.raises(Error):
+            new_route.validate()
+
+    def test_validate_next_state_id(self, new_route):
+        new_route.next_state_id = 0
         with pytest.raises(Error):
             new_route.validate()

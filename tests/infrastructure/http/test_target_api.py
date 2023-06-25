@@ -3,6 +3,7 @@ import pprint
 import pytest
 
 from app.domain.model.process_maker.target import TargetType
+from app.infrastructure.factory_bot.setup_test import counter
 from app.infrastructure.http.fastapi_adapter.group import group_service
 from app.infrastructure.http.fastapi_adapter.process_maker.target import target_service
 from app.pkgs.api_client import client
@@ -10,7 +11,7 @@ from app.pkgs.api_client import client
 
 class TestTargetAPI:
 
-    @pytest.mark.run(order=11)
+    @pytest.mark.run(order=counter.inc())
     def test_create_new_target(self):
         # Make a POST request to the endpoint
         response = client.post("/api/target",
@@ -30,7 +31,7 @@ class TestTargetAPI:
         # You can also assert against specific values if needed
         assert data["name"] == "Test Target"
 
-    @pytest.mark.run(order=12)
+    @pytest.mark.run(order=counter.inc())
     def test_find_one_target(self):
         # find the target in previous test
         target = target_service.find_one_by_name("Test Target")
@@ -51,7 +52,7 @@ class TestTargetAPI:
         # You can also assert against specific values if needed
         assert data["name"] == "Test Target"
 
-    @pytest.mark.run(order=13)
+    @pytest.mark.run(order=counter.inc())
     def test_search_target(self):
         # let make some other target to make this test more sense, also inherit the target created from previous test
         response = client.post("/api/target",
@@ -90,7 +91,7 @@ class TestTargetAPI:
         assert data["page"] == 1
         assert data["page_size"] == 10
 
-    @pytest.mark.run(order=14)
+    @pytest.mark.run(order=counter.inc())
     def test_update_target(self):
         # find the target in previous test
         target = target_service.find_one_by_name("Test Target 2")
@@ -124,7 +125,7 @@ class TestTargetAPI:
         assert "error" in data
         assert "data" in data
 
-    @pytest.mark.run(order=15)
+    @pytest.mark.run(order=counter.inc())
     def test_delete_target(self):
         # create a target to delete
         response = client.post("/api/target",
@@ -149,7 +150,7 @@ class TestTargetAPI:
         assert data["name"] == "deleted target"
         assert data["deleted_at"] is not None
 
-    @pytest.mark.run(order=16)
+    @pytest.mark.run(order=counter.inc())
     def test_create_target_for_process(self):
         staff_group = group_service.find_one_by_name("staff group")
         leader_group = group_service.find_one_by_name("leader group")
