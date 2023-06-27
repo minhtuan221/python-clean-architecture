@@ -86,6 +86,8 @@ class ProcessService(object):
         process = self.find_one(process_id)
         state = State(name=name, description=description, state_type=state_type)
         state.validate()
+        # check duplicate name
+        self.check_duplicate_state(process_id, name)
         state.process = process
         return self.state_repo.create(state)
 
@@ -111,11 +113,19 @@ class ProcessService(object):
                 return state
         raise error_collection.RecordNotFound(f'cannot find state with type=({state_type})')
 
+    def check_duplicate_state(self, process_id: int, name: str):
+        dup_state = self.state_repo.find_by_name_and_parent(process_id, name)
+        if dup_state:
+            raise error_collection.ValidationError(f'duplicate name state, receive {name}')
+
     def update_state_on_process(self, process_id: int, state_id: int, name: str = '',
                                 description: str = '',
                                 state_type: str = ''):
         state = self.find_state_on_process(process_id, state_id)
-        if name:
+        name = name.strip()
+        if name and name != state.name:
+            # check duplicate name
+            self.check_duplicate_state(process_id, name)
             state.name = name
         if description:
             state.description = description
@@ -126,8 +136,7 @@ class ProcessService(object):
 
     def remove_state_from_process(self, process_id: int, state_id: int) -> State:
         state = self.find_state_on_process(process_id, state_id)
-        self.state_repo.delete(state.id)
-        return state
+        return self.state_repo.delete(state.id)
 
     def add_activity_to_state(self, process_id: int, state_id: int, activity_id: int) -> State:
         activity = self.activity_repo.find_one(activity_id)
@@ -162,7 +171,7 @@ class ProcessService(object):
     def check_duplicate_route(self, process_id: int, current_state_id: int, next_state_id: int):
         dup_route = self.route_repo.find_for_duplication(process_id, current_state_id, next_state_id)
         if dup_route:
-            raise error_collection.RecordAlreadyExist('the route already exist')
+            raise error_collection.RecordAlreadyExist('the route between 2 states already exist')
 
     def find_route_on_process(self, process_id: int, route_id: int) -> Route:
         route = self.route_repo.find_by_parent(process_id, route_id)
@@ -178,6 +187,8 @@ class ProcessService(object):
         if next_state_id >= -1:
             route.next_state_id = next_state_id
         route.validate()
+        # find duplicate route, allow one route from state to state only
+        self.check_duplicate_route(process_id, current_state_id, next_state_id)
         return self.route_repo.update(route)
 
     def remove_route_from_process(self, process_id: int, route_id: int) -> State:

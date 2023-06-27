@@ -53,12 +53,15 @@ class TestGroupAPI:
     @pytest.mark.run(order=counter.inc())
     def test_search_group(self):
         # let make some other groups to make this test more sense, also inherit the group created from previous test
-        client.post("/api/group",
+        response = client.post("/api/group",
                     json={"name": "Test Group 2", "description": "Test Description"})
-        client.post("/api/group",
+        assert response.status_code == 200
+        response = client.post("/api/group",
                     json={"name": "Not in Search result", "description": "Test Description"})
-        client.post("/api/group",
+        assert response.status_code == 200
+        response = client.post("/api/group",
                     json={"name": "Not in Search result", "description": "Test Description"})
+        assert response.status_code == 200
 
         # Make a GET request to the endpoint
         response = client.get("/api/group", params={"name": "Test Group"})

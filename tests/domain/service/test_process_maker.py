@@ -25,13 +25,11 @@ class TestProcessMakerService:
     def test_process(self) -> Process:
         return create_work_flow('workflow test 1')
 
-    @pytest.mark.run(order=1)
     def test_get_process_with_all_children(self, test_process):
         assert test_process.name == 'workflow test 1'
         assert test_process.status == 'inactive'
 
-    @pytest.mark.run(order=2)
-    def test_add_state_to_process(self, test_process):
+    def test_process_as_json(self, test_process):
         state_start = process_service.add_state_to_process(test_process.id, 'start', 'start',
                                                            StateType.start)
 
