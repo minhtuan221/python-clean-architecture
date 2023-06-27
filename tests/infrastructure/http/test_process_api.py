@@ -15,7 +15,8 @@ class TestProcessAPI:
     def test_new_process(self):
         # Make a POST request to the endpoint
         response = client.post("/api/process",
-                               json={"name": "Test Process 1", "description": "Test Description"})
+                               json={"name": f"Test Process {counter.inc()}",
+                                     "description": "Test Description"})
 
         # Assert the response status code
         assert response.status_code == 200
@@ -28,13 +29,12 @@ class TestProcessAPI:
         assert "updated_at" in data
 
         # You can also assert against specific values if needed
-        assert data["name"] == "Test Process 1"
+        assert data["name"] == f"Test Process {counter.value}"
         new_process = process_service.find_one(data['id'])
         yield new_process
 
     @pytest.mark.run(order=302)
     def test_find_one_process(self, test_new_process):
-
         # Make a GET request to the endpoint
         response = client.get(f"/api/process/{test_new_process.id}")
 
@@ -55,13 +55,16 @@ class TestProcessAPI:
     def test_search_process(self):
         # let make some other process to make this test more sense, also inherit the process created from previous test
         response = client.post("/api/process",
-                    json={"name": "Test Process 2", "description": "Test Description"})
+                               json={"name": "Test Process show in result",
+                                     "description": "Test Description"})
         assert response.status_code == 200
         response = client.post("/api/process",
-                    json={"name": "Not in Search result 1", "description": "Test Description"})
+                               json={"name": "Not in Search result 1",
+                                     "description": "Test Description"})
         assert response.status_code == 200
         response = client.post("/api/process",
-                    json={"name": "Not in Search result 2", "description": "Test Description"})
+                               json={"name": "Not in Search result 2",
+                                     "description": "Test Description"})
         assert response.status_code == 200
 
         # Make a GET request to the endpoint
@@ -85,7 +88,8 @@ class TestProcessAPI:
     def test_update_process(self):
         # find the process in previous test
         response = client.post("/api/process",
-                               json={"name": "Process not updated yet", "description": "Test Description"})
+                               json={"name": "Process not updated yet",
+                                     "description": "Test Description"})
         assert response.status_code == 200
         data = response.json()
         process_id = data['id']
@@ -139,16 +143,10 @@ class TestProcessAPI:
         assert data["name"] == "deleted process"
         assert data["deleted_at"] is not None
 
+    @pytest.fixture
     @pytest.mark.run(order=306)
-    def test_add_remove_state_from_completed_process(self):
-        # todo: should use fixture and divide this test to multiple tests
-        # find the process in previous test
-        response = client.post("/api/process",
-                               json={"name": "Process for add or remove state",
-                                     "description": "Test Description"})
-        assert response.status_code == 200
-        data = response.json()
-        process_id = data['id']
+    def test_add_state_to_process(self, test_new_process):
+        process_id = test_new_process.id
 
         # add state to process
         response = client.post(f"/api/process/{process_id}/state",
@@ -162,6 +160,11 @@ class TestProcessAPI:
         # Assert the response JSON data
         data = response.json()
         state_id = data['id']
+        yield process_service.find_state_on_process(process_id, state_id)
+
+    @pytest.mark.run(order=306)
+    def test_add_duplicate_state_to_process(self, test_new_process, test_add_state_to_process):
+        process_id = test_new_process.id
 
         # return 400 if duplicate state name
         response = client.post(f"/api/process/{process_id}/state",
@@ -172,10 +175,14 @@ class TestProcessAPI:
         # Assert the response status code
         assert response.status_code == 400
 
+    @pytest.mark.run(order=306)
+    def test_update_state_to_process(self, test_new_process, test_add_state_to_process):
+        process_id = test_new_process.id
+        state_id = test_add_state_to_process.id
         # update state to process
         response = client.put(f"/api/process/{process_id}/state/{state_id}",
-                               json={"name": "updated state point",
-                                     "description": "Test updated Description"})
+                              json={"name": "updated state point",
+                                    "description": "Test updated Description"})
 
         # Assert the response status code
         assert response.status_code == 200
@@ -185,18 +192,104 @@ class TestProcessAPI:
         assert data['name'] == "updated state point"
         assert data['description'] == "Test updated Description"
 
-        # update duplicate state
-        response = client.put(f"/api/process/{process_id}/state/{state_id}",
-                              json={"name": "updated state point",
-                                    "description": "Test updated Description"})
+    @pytest.mark.run(order=306)
+    def test_update_dup_state_to_process(self, test_new_process, test_add_state_to_process):
+        process_id = test_new_process.id
+        # add state to process
+        response = client.post(f"/api/process/{process_id}/state",
+                               json={"name": "second point",
+                                     "description": "Test Description",
+                                     'state_type': 'start'})
 
         # Assert the response status code
         assert response.status_code == 200
 
-        # remove state from process
-        response = client.delete(f"/api/process/{process_id}/state/{state_id}",)
+        # Assert the response JSON data
+        data = response.json()
+        state_id = data['id']
+
+        # update duplicate state
+        response = client.put(f"/api/process/{process_id}/state/{state_id}",
+                              json={"name": "start point",
+                                    "description": "Test updated Description"})
 
         # Assert the response status code
+        assert response.status_code == 400
+
+    @pytest.mark.run(order=306)
+    def test_remove_state_from_process(self, test_new_process, test_add_state_to_process):
+        process_id = test_new_process.id
+        state_id = test_add_state_to_process.id
+
+        # remove state from process
+        response = client.delete(f"/api/process/{process_id}/state/{state_id}", )
+
+        # Assert the response status code
+        assert response.status_code == 200
+        data = response.json()
+        assert data['deleted_at'] is not None
+
+    @pytest.fixture
+    @pytest.mark.run(order=306)
+    def test_add_route_to_process(self, test_new_process, test_add_state_to_process):
+        process_id = test_new_process.id
+        # add state to process
+        response = client.post(f"/api/process/{process_id}/state",
+                               json={"name": "second point",
+                                     "description": "Test Description",
+                                     'state_type': 'start'})
+
+        # Assert the response status code
+        assert response.status_code == 200
+
+        # Assert the response JSON data
+        data = response.json()
+        second_state_id = data['id']
+
+        response = client.post(
+            f"/api/process/{process_id}/route",
+            json={"current_state_id": test_add_state_to_process.id,
+                  "next_state_id": second_state_id})
+        assert response.status_code == 200
+        data = response.json()
+        yield process_service.find_route_on_process(process_id, data['id'])
+
+    @pytest.mark.run(order=306)
+    def test_add_dup_route_to_process(self, test_new_process, test_add_route_to_process):
+        process_id = test_new_process.id
+
+        response = client.post(
+            f"/api/process/{process_id}/route",
+            json={"current_state_id": test_add_route_to_process.current_state_id,
+                  "next_state_id": test_add_route_to_process.next_state_id})
+        assert response.status_code == 400
+
+    @pytest.mark.run(order=306)
+    def test_add_revert_route_to_process(self, test_new_process, test_add_route_to_process):
+        process_id = test_new_process.id
+
+        response = client.post(
+            f"/api/process/{process_id}/route",
+            json={"current_state_id": test_add_route_to_process.next_state_id,
+                  "next_state_id": test_add_route_to_process.current_state_id})
+        assert response.status_code == 200
+
+    @pytest.mark.run(order=306)
+    def test_add_no_next_state_route_to_process(self, test_new_process, test_add_route_to_process):
+        process_id = test_new_process.id
+
+        response = client.post(
+            f"/api/process/{process_id}/route",
+            json={"current_state_id": test_add_route_to_process.next_state_id,
+                  "next_state_id": 0})
+        assert response.status_code == 200
+
+    @pytest.mark.run(order=306)
+    def test_remove_route_from_process(self, test_new_process, test_add_route_to_process):
+        process_id = test_new_process.id
+
+        response = client.delete(
+            f"/api/process/{process_id}/route/{test_add_route_to_process.id}")
         assert response.status_code == 200
         data = response.json()
         assert data['deleted_at'] is not None
@@ -248,19 +341,19 @@ class TestProcessAPI:
 
         # add more state for further testing
         response = client.post(f"/api/process/{process.id}/state",
-                    json={"name": "request for approve",
-                          "description": "Test Description",
-                          'state_type': StateType.normal})
+                               json={"name": "request for approve",
+                                     "description": "Test Description",
+                                     'state_type': StateType.normal})
         assert response.status_code == 200
         response = client.post(f"/api/process/{process.id}/state",
-                    json={"name": "done",
-                          "description": "Test Description",
-                          'state_type': StateType.complete})
+                               json={"name": "done",
+                                     "description": "Test Description",
+                                     'state_type': StateType.complete})
         assert response.status_code == 200
         response = client.post(f"/api/process/{process.id}/state",
-                    json={"name": "denied",
-                          "description": "Test Description",
-                          'state_type': StateType.complete})
+                               json={"name": "denied",
+                                     "description": "Test Description",
+                                     'state_type': StateType.complete})
         assert response.status_code == 200
 
     @pytest.mark.run(order=309)
@@ -270,7 +363,7 @@ class TestProcessAPI:
 
         start_point = process_service.find_state_on_process_by_name(process.id, 'start point')
         request_for_approve = process_service.find_state_on_process_by_name(process.id,
-                                                                           'request for approve')
+                                                                            'request for approve')
         done_state = process_service.find_state_on_process_by_name(process.id, 'done')
         denied_state = process_service.find_state_on_process_by_name(process.id, 'denied')
 
@@ -280,7 +373,8 @@ class TestProcessAPI:
         send_email_staff = activity_service.find_one_by_name("send email staff")
 
         # notify leader about the new request
-        response = client.post(f"/api/process/{process.id}/state/{request_for_approve.id}/activity/{send_email_leader.id}")
+        response = client.post(
+            f"/api/process/{process.id}/state/{request_for_approve.id}/activity/{send_email_leader.id}")
         assert response.status_code == 200
         # notify staff that their request has been approved
         response = client.post(
@@ -298,7 +392,9 @@ class TestProcessAPI:
 
         # Assert the response status code
         assert response.status_code == 200
-        start_point_to_request_for_approve = process_service.find_route_on_process(process.id, response.json()['id'])
+        start_point_to_request_for_approve = process_service.find_route_on_process(process.id,
+                                                                                   response.json()[
+                                                                                       'id'])
 
         # Assert the response JSON data
         data = response.json()
@@ -312,23 +408,28 @@ class TestProcessAPI:
                                json={"current_state_id": request_for_approve.id,
                                      "next_state_id": done_state.id})
         assert response.status_code == 200
-        request_for_approve_to_done = process_service.find_route_on_process(process.id, response.json()['id'])
-        
+        request_for_approve_to_done = process_service.find_route_on_process(process.id,
+                                                                            response.json()['id'])
+
         response = client.post(f"/api/process/{process.id}/route",
                                json={"current_state_id": request_for_approve.id,
                                      "next_state_id": denied_state.id})
         assert response.status_code == 200
-        request_for_approve_to_denied = process_service.find_route_on_process(process.id, response.json()['id'])
+        request_for_approve_to_denied = process_service.find_route_on_process(process.id,
+                                                                              response.json()['id'])
         response = client.post(f"/api/process/{process.id}/route",
                                json={"current_state_id": request_for_approve.id,
                                      "next_state_id": start_point.id})
         assert response.status_code == 200
-        request_for_approve_to_start_point = process_service.find_route_on_process(process.id, response.json()['id'])
+        request_for_approve_to_start_point = process_service.find_route_on_process(process.id,
+                                                                                   response.json()[
+                                                                                       'id'])
         response = client.post(f"/api/process/{process.id}/route",
                                json={"current_state_id": start_point.id,
                                      "next_state_id": 0})
         assert response.status_code == 200
-        start_point_to_itself = process_service.find_route_on_process(process.id, response.json()['id'])
+        start_point_to_itself = process_service.find_route_on_process(process.id,
+                                                                      response.json()['id'])
 
         # add activity to route
         # notify that the request has been changed by staff (requester)
@@ -373,7 +474,3 @@ class TestProcessAPI:
         complete_process = process_service.find_one_by_name("Test Process Workflow")
 
         assert len(complete_process.to_json()['state']) == 4
-
-
-
-
