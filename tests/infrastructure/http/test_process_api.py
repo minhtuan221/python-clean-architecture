@@ -11,7 +11,7 @@ from app.infrastructure.http.fastapi_adapter.process_maker.process import proces
 class TestProcessAPI:
 
     @pytest.fixture
-    @pytest.mark.run(order=counter.inc())
+    @pytest.mark.run(order=301)
     def test_new_process(self):
         # Make a POST request to the endpoint
         response = client.post("/api/process",
@@ -32,7 +32,7 @@ class TestProcessAPI:
         new_process = process_service.find_one(data['id'])
         yield new_process
 
-    @pytest.mark.run(order=counter.inc())
+    @pytest.mark.run(order=302)
     def test_find_one_process(self, test_new_process):
 
         # Make a GET request to the endpoint
@@ -51,7 +51,7 @@ class TestProcessAPI:
         # You can also assert against specific values if needed
         assert data["name"] == "Test Process 1"
 
-    @pytest.mark.run(order=counter.inc())
+    @pytest.mark.run(order=303)
     def test_search_process(self):
         # let make some other process to make this test more sense, also inherit the process created from previous test
         response = client.post("/api/process",
@@ -81,7 +81,7 @@ class TestProcessAPI:
         assert data["page"] == 1
         assert data["page_size"] == 10
 
-    @pytest.mark.run(order=counter.inc())
+    @pytest.mark.run(order=304)
     def test_update_process(self):
         # find the process in previous test
         response = client.post("/api/process",
@@ -115,7 +115,7 @@ class TestProcessAPI:
         assert "error" in data
         assert "data" in data
 
-    @pytest.mark.run(order=counter.inc())
+    @pytest.mark.run(order=305)
     def test_delete_process(self):
         # create a process to delete
         response = client.post("/api/process",
@@ -139,7 +139,7 @@ class TestProcessAPI:
         assert data["name"] == "deleted process"
         assert data["deleted_at"] is not None
 
-    @pytest.mark.run(order=counter.inc())
+    @pytest.mark.run(order=306)
     def test_add_remove_state_from_completed_process(self):
         # todo: should use fixture and divide this test to multiple tests
         # find the process in previous test
@@ -201,7 +201,7 @@ class TestProcessAPI:
         data = response.json()
         assert data['deleted_at'] is not None
 
-    @pytest.mark.run(order=counter.inc())
+    @pytest.mark.run(order=307)
     def test_create_completed_process(self):
         # Make a POST request to the endpoint
         response = client.post("/api/process",
@@ -221,7 +221,7 @@ class TestProcessAPI:
         # You can also assert against specific values if needed
         assert data["name"] == "Test Process Workflow"
 
-    @pytest.mark.run(order=counter.inc())
+    @pytest.mark.run(order=308)
     def test_add_state_to_completed_process(self):
         # get Test Process from previous test
         process = process_service.find_one_by_name("Test Process Workflow")
@@ -263,7 +263,7 @@ class TestProcessAPI:
                           'state_type': StateType.complete})
         assert response.status_code == 200
 
-    @pytest.mark.run(order=counter.inc())
+    @pytest.mark.run(order=309)
     def test_add_route_to_completed_process(self):
         # get Test Process from previous test
         process = process_service.find_one_by_name("Test Process Workflow")
